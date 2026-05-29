@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "MyTab Sans";
+  src:
+    local("Inter Variable"),
+    local("Inter"),
+    local("SF Pro Display"),
+    local("Segoe UI Variable"),
+    local("Segoe UI");
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "MyTab Sans", ui-sans-serif, system-ui, sans-serif;
+}
