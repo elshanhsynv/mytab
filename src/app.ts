@@ -26,9 +26,13 @@ const styles = {
   content: 'mx-auto w-full max-w-[880px]',
   settingsButton:
     'inline-flex size-10 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300 [&_svg]:size-5',
-  addFavoriteButton:
-    'inline-flex h-10 items-center gap-2 rounded-2xl border border-white/15 bg-white/[0.085] px-4 text-sm font-semibold text-white/85 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_14px_40px_rgba(0,0,0,0.22)] backdrop-blur-2xl transition hover:bg-white/[0.13] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300 [&_svg]:size-4',
-  viewHeader: 'mb-4 flex items-center justify-end px-1',
+  addFavoriteCard:
+    'add-favorite-card group relative flex w-full flex-col items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-center text-white shadow-lg shadow-black/10 backdrop-blur-xl ring-1 ring-white/10 transition duration-200 hover:-translate-y-1 hover:border-white/25 hover:bg-white/15 hover:shadow-2xl hover:shadow-violet-950/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300',
+  addFavoriteIcon:
+    'grid shrink-0 place-items-center rounded-xl bg-white/15 text-white/90 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)] transition group-hover:bg-white/20 group-hover:text-white [&_svg]:size-7',
+  addFavoriteIconComfortable: 'size-10 sm:size-10',
+  addFavoriteIconCompact: 'size-8 sm:size-8 [&_svg]:size-5',
+  addFavoriteTitle: 'max-w-full truncate font-semibold leading-tight text-white',
   launcherGrid:
     'mx-auto grid w-full justify-center gap-3 [grid-template-columns:repeat(3,minmax(0,92px))] sm:gap-4 sm:[grid-template-columns:repeat(5,minmax(0,104px))] lg:[grid-template-columns:repeat(7,minmax(0,112px))] xl:[grid-template-columns:repeat(7,minmax(0,118px))]',
   launcherGridCompact:
@@ -53,13 +57,14 @@ if (root) {
 async function init(appRoot: HTMLElement): Promise<void> {
   const [{ bookmarks, folders }, savedSettings, savedFavorites, savedPinnedIds, savedRecentlyVisited] = await Promise.all([
     bookmarkService.getDashboardBookmarks(),
-    storage.get(APP_CONFIG.STORAGE_KEYS.SETTINGS, APP_CONFIG.DEFAULTS.settings),
+    storage.get<unknown>(APP_CONFIG.STORAGE_KEYS.SETTINGS, APP_CONFIG.DEFAULTS.settings),
     storage.get<unknown[]>(APP_CONFIG.STORAGE_KEYS.FAVORITES, []),
     storage.get<unknown[]>(APP_CONFIG.STORAGE_KEYS.PINNED, []),
     storage.get<unknown[]>(APP_CONFIG.STORAGE_KEYS.RECENT, []),
   ]);
 
-  const settings = sanitizeSettings(savedSettings);
+  const legacyWallpaperUrl = getLegacyWallpaperUrl(savedSettings);
+  const settings = sanitizeSettings({ ...(isRecord(savedSettings) ? savedSettings : {}), wallpaperUrl: legacyWallpaperUrl });
   const favorites = sanitizeFavorites(savedFavorites);
   const pinnedIds = savedPinnedIds.filter(isString);
   const recentlyVisited = sanitizeStoredItems(savedRecentlyVisited);
@@ -77,6 +82,7 @@ async function init(appRoot: HTMLElement): Promise<void> {
   applyAppearance(settings);
   render(appRoot);
   bindEvents(appRoot);
+  void hydrateWallpaper(settings, legacyWallpaperUrl);
 
   state.subscribe('bookmarks', () => renderSections(appRoot));
   state.subscribe('folders', () => renderSections(appRoot));
@@ -91,7 +97,10 @@ async function init(appRoot: HTMLElement): Promise<void> {
     renderSections(appRoot);
   });
   state.subscribe('settings', async (settings) => {
-    await storage.set(APP_CONFIG.STORAGE_KEYS.SETTINGS, settings);
+    await Promise.all([
+      storage.set(APP_CONFIG.STORAGE_KEYS.SETTINGS, getSettingsForStorage(settings)),
+      storage.set(APP_CONFIG.STORAGE_KEYS.WALLPAPER, settings.wallpaperUrl),
+    ]);
     applyAppearance(settings);
     render(appRoot);
   });
@@ -160,9 +169,12 @@ function renderSections(appRoot: HTMLElement): void {
       fragment.append(createSection('', folderGrid, 'No folders match your search.'));
     }
   } else if (settings.dashboardView === 'favorites') {
-    fragment.append(createFavoritesHeader());
     const sites = sortSites(favorites, current.pinnedIds).slice(0, itemCount);
-    fragment.append(createSection('', createBookmarkGrid(sites, gridClass(settings.cardDensity), settings.cardDensity), 'No favorites match your search.'));
+    const grid = createBookmarkGrid(sites, gridClass(settings.cardDensity), settings.cardDensity);
+    if (!current.searchQuery.trim() && current.favorites.length < itemCount) {
+      grid.append(createAddFavoriteCard(settings.cardDensity));
+    }
+    fragment.append(createSection('', grid, 'No favorites match your search.'));
   } else {
     const sites = sortSites(bookmarks, current.pinnedIds).slice(0, itemCount);
     fragment.append(createSection('', createBookmarkGrid(sites, gridClass(settings.cardDensity), settings.cardDensity), 'No bookmarks match your search.'));
@@ -459,20 +471,30 @@ function createViewSwitch(activeView: DashboardSettings['dashboardView']): HTMLE
   return switcher;
 }
 
-function createFavoritesHeader(): HTMLElement {
-  const header = document.createElement('div');
-  header.className = styles.viewHeader;
-  header.innerHTML = `
-    <button class="${styles.addFavoriteButton}" type="button" data-action="add-favorite" aria-label="Add favorite">
-      ${icons.plus}<span>Add favorite</span>
-    </button>
-  `;
-  return header;
-}
-
 function getGridItemCount(rows: number): number {
   const safeRows = Math.min(APP_CONFIG.GRID.MAX_ROWS, Math.max(1, rows || APP_CONFIG.GRID.DEFAULT_ROWS));
   return safeRows * APP_CONFIG.GRID.COLUMNS;
+}
+
+function createAddFavoriteCard(density: DashboardSettings['cardDensity']): HTMLButtonElement {
+  const isCompact = density === 'compact';
+  const card = document.createElement('button');
+  card.className = `${styles.addFavoriteCard} ${isCompact ? 'gap-2 py-2' : 'gap-3 py-3'}`;
+  card.type = 'button';
+  card.dataset.action = 'add-favorite';
+  card.setAttribute('role', 'listitem');
+  card.setAttribute('aria-label', 'Add favorite');
+
+  const icon = document.createElement('span');
+  icon.className = `${styles.addFavoriteIcon} ${isCompact ? styles.addFavoriteIconCompact : styles.addFavoriteIconComfortable}`;
+  icon.innerHTML = icons.plus;
+
+  const title = document.createElement('span');
+  title.className = `${styles.addFavoriteTitle} ${isCompact ? 'text-[11px]' : 'text-xs'}`;
+  title.textContent = 'Add site';
+
+  card.append(icon, title);
+  return card;
 }
 
 function sortSites(bookmarks: BookmarkItem[], pinnedIds: string[]): BookmarkItem[] {
@@ -617,6 +639,30 @@ function exportSettings(): void {
   URL.revokeObjectURL(link.href);
 }
 
+function getLegacyWallpaperUrl(value: unknown): string {
+  return isRecord(value) && typeof value.wallpaperUrl === 'string' ? value.wallpaperUrl : '';
+}
+
+async function hydrateWallpaper(settings: DashboardSettings, legacyWallpaperUrl: string): Promise<void> {
+  if (legacyWallpaperUrl) {
+    await Promise.all([
+      storage.set(APP_CONFIG.STORAGE_KEYS.WALLPAPER, legacyWallpaperUrl),
+      storage.set(APP_CONFIG.STORAGE_KEYS.SETTINGS, getSettingsForStorage(settings)),
+    ]);
+    return;
+  }
+
+  if (settings.wallpaperId !== 'custom') return;
+
+  const wallpaperUrl = await storage.get<string>(APP_CONFIG.STORAGE_KEYS.WALLPAPER, '');
+  if (!wallpaperUrl) return;
+
+  const currentSettings = state.get('settings');
+  if (currentSettings.wallpaperUrl !== wallpaperUrl) {
+    state.set('settings', { ...currentSettings, wallpaperUrl });
+  }
+}
+
 async function importSettings(file: File): Promise<void> {
   const raw = await file.text();
   const data: unknown = JSON.parse(raw);
@@ -658,6 +704,21 @@ function getExportableSettings(settings: DashboardSettings): DashboardSettings {
     ...settings,
     wallpaperId: APP_CONFIG.DEFAULTS.settings.wallpaperId,
     wallpaperUrl: '',
+  };
+}
+
+function getSettingsForStorage(settings: DashboardSettings): Omit<DashboardSettings, 'wallpaperUrl'> {
+  return {
+    dashboardView: settings.dashboardView,
+    wallpaperId: settings.wallpaperId,
+    accentColor: settings.accentColor,
+    clockFormat: settings.clockFormat,
+    showGreeting: settings.showGreeting,
+    showClock: settings.showClock,
+    showSearch: settings.showSearch,
+    gridRows: settings.gridRows,
+    cardDensity: settings.cardDensity,
+    userName: settings.userName,
   };
 }
 

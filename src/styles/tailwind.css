@@ -13,4 +13,62 @@
 
 @theme {
   --font-sans: "MyTab Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --ease-mytab-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-mytab-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-mytab-view-in: mytab-view-in 200ms var(--ease-mytab-out) backwards;
+  --animate-mytab-tile-in: mytab-tile-in 260ms var(--ease-mytab-soft) backwards;
+}
+
+@keyframes mytab-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes mytab-tile-in {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.992);
+  }
+}
+
+.section-header {
+  animation: var(--animate-mytab-view-in);
+}
+
+.bookmark-card,
+.folder-card,
+.add-favorite-card,
+.empty-surface {
+  animation: var(--animate-mytab-tile-in);
+  animation-delay: calc(var(--item-index, 0) * 14ms);
+}
+
+
+.bookmark-card,
+.folder-card,
+.add-favorite-card {
+  transition-duration: 180ms;
+  transition-timing-function: var(--ease-mytab-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .section-header,
+  .bookmark-card,
+  .folder-card,
+  .add-favorite-card,
+  .empty-surface {
+    animation: none;
+    transform: none;
+  }
+
+  .bookmark-card,
+  .folder-card,
+  .add-favorite-card {
+    transition-duration: 1ms;
+  }
 }

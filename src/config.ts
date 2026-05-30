@@ -15,6 +15,7 @@ export const APP_CONFIG = {
     FAVORITES: 'mytab_favorites',
     PINNED: 'mytab_pinned',
     RECENT: 'mytab_recent',
+    WALLPAPER: 'mytab_wallpaper',
   },
   DEFAULTS: {
     settings: {

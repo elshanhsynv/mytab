@@ -3,7 +3,7 @@ import { icons } from './icons';
 
 const styles = {
   card:
-    'folder-card group relative flex aspect-square w-full flex-col items-center justify-center gap-4 rounded-3xl border border-white/15 bg-white/10 p-4 text-center text-white shadow-lg shadow-black/10 backdrop-blur-xl ring-1 ring-white/10 transition hover:-translate-y-1 hover:border-white/25 hover:bg-white/15 hover:shadow-2xl hover:shadow-violet-950/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300',
+    'folder-card group relative flex aspect-square w-full flex-col items-center justify-center gap-4 rounded-3xl border border-white/15 bg-white/10 p-4 text-center text-white shadow-lg shadow-black/10 backdrop-blur-xl ring-1 ring-white/10 transition duration-200 hover:-translate-y-1 hover:border-white/25 hover:bg-white/15 hover:shadow-2xl hover:shadow-violet-950/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300',
   icon: 'size-11 text-violet-300 transition group-hover:scale-105 [&_svg]:size-full',
   name: 'max-w-full truncate text-sm font-medium text-white/80',
   count:

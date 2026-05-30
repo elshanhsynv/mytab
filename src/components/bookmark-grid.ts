@@ -7,13 +7,16 @@ export function createBookmarkGrid(
   density: 'comfortable' | 'compact' = 'comfortable'
 ): HTMLElement {
   const grid = document.createElement('div');
-  grid.className = className;
+  grid.className = `${className} bookmark-grid`;
   grid.setAttribute('role', 'list');
+  grid.dataset.grid = 'launcher';
 
   const fragment = document.createDocumentFragment();
+
   bookmarks.forEach((bookmark, index) => {
     const card = createBookmarkCard(bookmark, index, density);
     card.setAttribute('role', 'listitem');
+    card.style.setProperty('--item-index', String(Math.min(index, 10)));
     fragment.append(card);
   });
 

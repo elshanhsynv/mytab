@@ -42,6 +42,9 @@ const CLOCK_FORMAT_OPTIONS = [
 ] as const satisfies readonly SelectOption<DashboardSettings['clockFormat']>[];
 
 const COLOR_PATTERN = /^#[\da-f]{6}$/i;
+const MAX_WALLPAPER_WIDTH = 1920;
+const MAX_WALLPAPER_HEIGHT = 1080;
+const WALLPAPER_QUALITY = 0.82;
 
 const styles = {
   overlay: 'fixed inset-0 z-50 grid place-items-center bg-black/30 p-3 backdrop-blur-md transition-opacity sm:p-6',
@@ -106,7 +109,7 @@ function clampRows(value: number): number {
   return Math.min(APP_CONFIG.GRID.MAX_ROWS, Math.max(1, rows));
 }
 
-function readAsDataUrl(file: File): Promise<string> {
+function readAsDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -119,6 +122,37 @@ function readAsDataUrl(file: File): Promise<string> {
     };
     reader.onerror = () => reject(reader.error ?? new Error('Selected file could not be read.'));
     reader.readAsDataURL(file);
+  });
+}
+
+async function readOptimizedWallpaper(file: File): Promise<string> {
+  if (file.type === 'image/svg+xml') return readAsDataUrl(file);
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_WALLPAPER_WIDTH / bitmap.width, MAX_WALLPAPER_HEIGHT / bitmap.height);
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d', { alpha: false });
+    if (!context) return readAsDataUrl(file);
+
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+
+    const blob = await canvasToBlob(canvas);
+    return blob ? readAsDataUrl(blob) : readAsDataUrl(file);
+  } catch {
+    return readAsDataUrl(file);
+  }
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    canvas.toBlob(resolve, 'image/webp', WALLPAPER_QUALITY);
   });
 }
 
@@ -257,7 +291,7 @@ function bindWallpaperFile(root: HTMLElement, signal: AbortSignal): void {
       return;
     }
 
-    void readAsDataUrl(file)
+    void readOptimizedWallpaper(file)
       .then((dataUrl) => {
         root.querySelector<HTMLInputElement>('input[name="wallpaperId"][value="custom"]')?.click();
         setCustomWallpaper(root, dataUrl);

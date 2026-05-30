@@ -1,8 +1,9 @@
 const styles = {
-  section: 'mb-5',
-  header: 'mb-4 flex items-center justify-between',
+  section: 'py-3 mb-5 section-surface',
+  header: 'mb-4 flex items-center justify-between section-header',
   title: 'text-xs font-semibold uppercase tracking-wide text-white/55',
-  empty: 'mx-auto grid max-w-sm place-items-center rounded-3xl border border-white/10 bg-white/10 p-8 text-center text-white/70 backdrop-blur-md',
+  empty:
+    'empty-surface mx-auto grid max-w-sm place-items-center rounded-3xl border border-white/10 bg-white/10 p-8 text-center text-white/70 backdrop-blur-md',
   emptyTitle: 'mb-2 text-base font-semibold text-white',
   emptyText: 'text-sm leading-6 text-white/60',
 };
