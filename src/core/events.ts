@@ -33,7 +33,9 @@ export function delegate(
   handler: (e: Event, target: Element) => void
 ): () => void {
   const listener = (e: Event) => {
-    const target = (e.target as Element)?.closest(selector);
+    if (!(e.target instanceof Element)) return;
+
+    const target = e.target.closest(selector);
     if (target && root.contains(target)) {
       handler(e, target);
     }
