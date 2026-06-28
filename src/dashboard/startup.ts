@@ -16,7 +16,6 @@ import {
 import { hydrateWallpaper } from './actions';
 import { bindDashboardEvents } from './events';
 import { applyPinsToFolders } from './items';
-import { createRenderScheduler } from './render-scheduler';
 import { applyAppearance, renderDashboard, renderSections } from './render';
 import type { StartupData, Unsubscribe } from './types';
 
@@ -66,7 +65,16 @@ async function loadStartupData(): Promise<StartupData> {
 }
 
 function subscribeState(appRoot: HTMLElement): Unsubscribe {
-  const scheduleSectionsRender = createRenderScheduler(() => renderSections(appRoot));
+  let frameId = 0;
+  const scheduleSectionsRender = () => {
+    if (frameId) return;
+
+    frameId = window.requestAnimationFrame(() => {
+      frameId = 0;
+      renderSections(appRoot);
+    });
+  };
+
   const subscriptions: Unsubscribe[] = [
     state.subscribe('bookmarks', scheduleSectionsRender),
     state.subscribe('folders', scheduleSectionsRender),

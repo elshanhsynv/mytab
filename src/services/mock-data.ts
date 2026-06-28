@@ -58,8 +58,6 @@ export const mockFolders: Folder[] = [
   },
 ];
 
-export const mockBookmarks = mockFolders.flatMap((folder) => folder.items);
-
 function bookmark(
   id: string,
   title: string,
