@@ -25,12 +25,19 @@ export function createClock(settings: DashboardSettings): HTMLElement {
     if (settings.showClock) {
       time.hidden = false;
       time.dateTime = now.toISOString();
-      const timeText = now.toLocaleTimeString([], {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: settings.clockFormat === '12h',
-      });
-      const [clockText, period] = timeText.split(' ');
+      // const timeText = now.toLocaleTimeString([], {
+      //   hour: 'numeric',
+      //   minute: '2-digit',
+      //   hour12: settings.clockFormat === '12h',
+      // });
+      // const [clockText, period] = timeText.split(' ');
+      const parts = new Intl.DateTimeFormat([], {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: settings.clockFormat === "12h",
+      }).formatToParts(now);
+      const clockText = parts.filter(part => part.type !== 'dayPeriod').map(part => part.value).join('');
+      const period = parts.find(part => part.type === 'dayPeriod')?.value ?? '';
       time.innerHTML = period ? `${clockText}<span class="${styles.period}">${period}</span>` : clockText;
     } else {
       time.hidden = true;
@@ -44,6 +51,12 @@ export function createClock(settings: DashboardSettings): HTMLElement {
   };
 
   render();
-  window.setInterval(render, 30_000);
-  return clock;
+  const interval = window.setInterval(render, 30_000);
+
+  const instance = clock as HTMLElement & { destroy(): void };
+  instance.destroy = () => {
+    clearInterval(interval);
+  };
+
+  return instance;
 }

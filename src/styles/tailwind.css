@@ -28,6 +28,17 @@
   }
 }
 
+@keyframes cardIn {
+
+  to {
+    opacity: 1;
+    transform:
+      translateY(0) scale(1);
+
+  }
+
+}
+
 @keyframes mytab-tile-in {
   from {
     opacity: 0;
@@ -35,11 +46,20 @@
   }
 }
 
+.bookmark-card {
+  opacity: 0;
+  transform:
+    translateY(10px) scale(.96);
+  animation:
+    cardIn .45s cubic-bezier(.2, .8, .2, 1) forwards;
+  animation-delay:
+    calc(var(--item-index) * 35ms);
+}
+
 .section-header {
   animation: var(--animate-mytab-view-in);
 }
 
-.bookmark-card,
 .folder-card,
 .add-favorite-card,
 .empty-surface {
@@ -48,7 +68,6 @@
 }
 
 
-.bookmark-card,
 .folder-card,
 .add-favorite-card {
   transition-duration: 180ms;
@@ -58,7 +77,6 @@
 @media (prefers-reduced-motion: reduce) {
 
   .section-header,
-  .bookmark-card,
   .folder-card,
   .add-favorite-card,
   .empty-surface {
@@ -66,7 +84,6 @@
     transform: none;
   }
 
-  .bookmark-card,
   .folder-card,
   .add-favorite-card {
     transition-duration: 1ms;

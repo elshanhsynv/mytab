@@ -1,5 +1,8 @@
+// bookmark-grid.ts
 import type { BookmarkItem } from '../types';
 import { createBookmarkCard } from './bookmark-card';
+
+const MAX_STAGGER_INDEX = 10;
 
 export function createBookmarkGrid(
   bookmarks: BookmarkItem[],
@@ -16,7 +19,7 @@ export function createBookmarkGrid(
   bookmarks.forEach((bookmark, index) => {
     const card = createBookmarkCard(bookmark, index, density);
     card.setAttribute('role', 'listitem');
-    card.style.setProperty('--item-index', String(Math.min(index, 10)));
+    card.style.setProperty('--item-index', String(Math.min(index, MAX_STAGGER_INDEX)));
     fragment.append(card);
   });
 

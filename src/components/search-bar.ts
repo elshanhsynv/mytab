@@ -21,7 +21,7 @@ export function createSearchBar(onSearch: (query: string) => void): HTMLElement 
   wrapper.innerHTML = `
     <span class="${styles.srOnly}">Search the web or type a URL</span>
     <span class="${styles.icon}">${icons.search}</span>
-    <input class="${styles.input}" type="text" placeholder="Search the web or type a URL" autocomplete="off" spellcheck="false" />
+    <input class="${styles.input}" type="search" placeholder="Search the web or type a URL" autocomplete="off" spellcheck="false" />
     <span class="${styles.shortcut}">/</span>
     <button class="${styles.clear}" type="button" aria-label="Clear search">${icons.x}</button>
   `;
@@ -46,7 +46,9 @@ export function createSearchBar(onSearch: (query: string) => void): HTMLElement 
 
   document.addEventListener('keydown', (event) => {
     const target = event.target as HTMLElement | null;
-    const isTyping = target?.matches('input, textarea, select, [contenteditable="true"]');
+    const isTyping = target?.closest(
+      'input, textarea, select, [contenteditable]'
+    )
     if ((event.key === '/' || (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey))) && !isTyping) {
       event.preventDefault();
       input.focus();

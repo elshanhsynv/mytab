@@ -15,7 +15,12 @@ export function createFolderCard(folder: Folder): HTMLElement {
   card.className = styles.card;
   card.type = 'button';
   card.dataset.folderId = folder.id;
-  card.setAttribute('aria-label', `${folder.title}, ${folder.items.length} items`);
+  const count = folder.items.length;
+
+  card.setAttribute(
+    'aria-label',
+    `${folder.title}, ${count} item${count === 1 ? '' : 's'}`
+  );
 
   card.innerHTML = `
     <span class="${styles.icon}">${icons.folder}</span>

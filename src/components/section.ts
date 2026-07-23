@@ -11,14 +11,15 @@ const styles = {
 export function createSection(title: string, content: Node, emptyText?: string): HTMLElement {
   const section = document.createElement('section');
   section.className = styles.section;
-  if (title) section.setAttribute('aria-labelledby', sectionId(title));
+  const id = sectionId(title);
+  if (title) section.setAttribute('aria-labelledby', id);
 
   if (title) {
     const header = document.createElement('div');
     header.className = styles.header;
 
     const heading = document.createElement('h2');
-    heading.id = sectionId(title);
+    heading.id = id;
     heading.className = styles.title;
     heading.textContent = title;
 
@@ -29,10 +30,14 @@ export function createSection(title: string, content: Node, emptyText?: string):
   if (content.childNodes.length === 0 && emptyText) {
     const empty = document.createElement('div');
     empty.className = styles.empty;
-    empty.innerHTML = `
-      <p class="${styles.emptyTitle}">Nothing here yet</p>
-      <p class="${styles.emptyText}">${emptyText}</p>
-    `;
+    const title = document.createElement('p');
+    title.className = styles.emptyTitle;
+    title.textContent = 'Nothing here yet';
+
+    const text = document.createElement('p');
+    text.className = styles.emptyText;
+    text.textContent = emptyText;
+    empty.append(title, text);
     section.append(empty);
   } else {
     section.append(content);
