@@ -6,7 +6,7 @@ import {
 import type { DashboardSettings } from "../types";
 import { icons } from "./icons";
 
-type MaybePromise<T> = T | Promise<T>;
+export type MaybePromise<T> = T | Promise<T>;
 
 export type SettingsModalOptions = {
     settings: DashboardSettings;
@@ -53,45 +53,44 @@ const WALLPAPER_QUALITY = 0.82;
 
 const styles = {
     settingsButton:
-        "inline-flex size-10 items-center justify-center rounded-full text-white/80 transition hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300 [&_svg]:size-5",
-    settingsContainer: "relative bg-white/[0.1] rounded-full",
+        "inline-flex size-9 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500 [&_svg]:size-4",
+    settingsContainer: "relative",
     overlay:
-        "fixed inset-0 z-50 grid place-items-center bg-black/30 p-3 backdrop-blur-md transition-opacity sm:p-6",
-    panel: "w-full max-w-3xl overflow-hidden rounded-[1.75rem] border border-white/20 bg-gradient-to-br from-white/10 to-white/5 text-white shadow-[0_8px_32px_0_rgba(0,0,0,0.35)] outline-none backdrop-blur-xl backdrop-saturate-200",
-    header: "flex items-start justify-between gap-5 border-b border-white/10 bg-white/5 px-5 py-4 sm:px-6 sm:py-5",
-    title: "m-0 text-lg font-bold tracking-wide text-white drop-shadow-md",
-    subtitle: "mt-1 text-sm font-medium text-white/60",
-    close: "inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10 text-white/70 shadow-sm backdrop-blur-md transition-all hover:scale-105 hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50 [&_svg]:size-4",
-    body: "flex max-h-[68vh] flex-col gap-6 overflow-y-auto px-5 py-5 sm:px-6 sm:py-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/20 hover:[&::-webkit-scrollbar-thumb]:bg-white/30",
-    section:
-        "rounded-3xl border border-white/10 bg-black/10 p-4 shadow-inner backdrop-blur-md sm:p-5",
+        "fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 transition-opacity sm:p-6",
+    panel: "w-full max-w-2xl overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 text-zinc-100 shadow-xl outline-none",
+    header: "flex items-center justify-between border-b border-zinc-800 px-6 py-4",
+    title: "m-0 text-base font-semibold text-zinc-100",
+    subtitle: "mt-0.5 text-xs text-zinc-400",
+    close: "inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-800/40 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-700 [&_svg]:size-4",
+    body: "flex max-h-[70vh] flex-col gap-5 overflow-y-auto p-6 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-700",
+    section: "rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-4",
     sectionTitle:
-        "mb-4 text-[0.68rem] font-bold uppercase tracking-[0.18em] text-white/50 drop-shadow-sm",
+        "mb-3 text-xs font-medium uppercase tracking-wider text-zinc-400",
     fieldGrid: "grid grid-cols-1 gap-4 sm:grid-cols-2",
-    field: "grid gap-2",
-    label: "text-sm font-semibold tracking-wide text-white/80 drop-shadow-sm",
+    field: "grid gap-1.5",
+    label: "text-xs font-medium text-zinc-300",
     inputShell:
-        "flex h-12 items-center gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 shadow-inner backdrop-blur-md transition-all focus-within:border-white/30 focus-within:bg-black/30 focus-within:ring-2 focus-within:ring-white/20",
-    select: "h-full min-w-0 flex-1 cursor-pointer appearance-none bg-transparent text-sm font-medium text-white outline-none [&_option]:bg-slate-900 [&_option]:text-white",
-    chevron: "pointer-events-none size-4 shrink-0 text-white/50",
-    wallpaperGrid: "grid grid-cols-2 gap-4 sm:grid-cols-4",
-    wallpaperCard: "group grid cursor-pointer gap-2",
+        "flex h-9 items-center gap-2.5 rounded-lg border border-zinc-800 bg-zinc-950 px-3 transition-colors focus-within:border-zinc-700 focus-within:ring-1 focus-within:ring-zinc-700",
+    select: "h-full min-w-0 flex-1 cursor-pointer appearance-none bg-transparent text-xs font-medium text-zinc-200 outline-none [&_option]:bg-zinc-900 [&_option]:text-zinc-200",
+    chevron: "pointer-events-none size-3.5 shrink-0 text-zinc-500",
+    wallpaperGrid: "grid grid-cols-2 gap-3 sm:grid-cols-4",
+    wallpaperCard: "group grid cursor-pointer gap-1.5",
     wallpaperInput: "peer sr-only",
     wallpaperPreview:
-        "relative block aspect-[1.45/1] overflow-hidden rounded-2xl border border-white/10 bg-black/20 bg-cover bg-center shadow-inner backdrop-blur-md transition-all duration-300 group-hover:-translate-y-1 group-hover:border-white/30 group-hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)] peer-checked:border-violet-400 peer-checked:shadow-[0_0_0_2px_rgba(167,139,250,0.5),0_8px_20px_rgba(0,0,0,0.3)] peer-checked:[&_.wallpaper-check]:flex",
+        "relative block aspect-[1.5/1] overflow-hidden rounded-lg border border-zinc-800 bg-zinc-950 bg-cover bg-center transition-all group-hover:border-zinc-700 peer-checked:border-indigo-500 peer-checked:ring-1 peer-checked:ring-indigo-500 peer-checked:[&_.wallpaper-check]:flex",
     wallpaperCheck:
-        "wallpaper-check absolute right-2 top-2 hidden size-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-violet-600 text-white shadow-md [&_svg]:size-3",
+        "wallpaper-check absolute right-1.5 top-1.5 hidden size-5 items-center justify-center rounded-full bg-indigo-600 text-white [&_svg]:size-3",
     wallpaperName:
-        "truncate text-center text-xs font-semibold tracking-wide text-white/60 transition-colors peer-checked:text-violet-300 drop-shadow-sm",
+        "truncate text-center text-xs font-medium text-zinc-400 transition-colors peer-checked:text-zinc-200",
     fileButton:
-        "inline-flex h-12 w-max cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/10 px-5 text-sm font-semibold text-white/80 shadow-sm backdrop-blur-md transition-all hover:bg-white/20 hover:text-white focus-within:ring-2 focus-within:ring-white/50 [&_svg]:size-4",
+        "inline-flex h-8 w-max cursor-pointer items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-800/40 px-3 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-zinc-100 focus-within:ring-2 focus-within:ring-zinc-700 [&_svg]:size-3.5",
     colorInput:
-        "h-8 w-full cursor-pointer appearance-none rounded border-0 bg-transparent p-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-none [&::-webkit-color-swatch]:rounded-md [&::-moz-color-swatch]:border-none [&::-moz-color-swatch]:rounded-md",
-    footer: "flex flex-wrap items-center justify-end gap-3 border-t border-white/10 bg-white/5 px-5 py-4 sm:px-6 sm:py-5 backdrop-blur-lg",
+        "h-5 w-full cursor-pointer appearance-none rounded border-0 bg-transparent p-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-zinc-700 [&::-webkit-color-swatch]:rounded-md [&::-moz-color-swatch]:border-zinc-700 [&::-moz-color-swatch]:rounded-md",
+    footer: "flex flex-wrap items-center justify-end gap-2.5 border-t border-zinc-800 bg-zinc-900/80 px-6 py-3.5",
     secondary:
-        "inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/10 px-5 text-sm font-semibold text-white/80 shadow-sm backdrop-blur-md transition-all hover:bg-white/20 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/50 [&_svg]:size-4",
+        "inline-flex h-8 cursor-pointer items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-800/40 px-3 text-xs font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-700 [&_svg]:size-3.5",
     primary:
-        "inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-white/20 bg-gradient-to-br from-violet-500/50 to-violet-700/50 px-5 text-sm font-bold text-white shadow-[0_4px_15px_rgba(139,92,246,0.3)] backdrop-blur-md transition-all hover:from-violet-500/60 hover:to-violet-700/60 hover:shadow-[0_6px_20px_rgba(139,92,246,0.5)] focus:outline-none focus:ring-2 focus:ring-violet-400 [&_svg]:size-4",
+        "inline-flex h-8 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3.5 text-xs font-medium text-white transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 [&_svg]:size-3.5",
 };
 
 export function createSettingsButton(): HTMLDivElement {
@@ -106,8 +105,6 @@ export function createSettingsButton(): HTMLDivElement {
     container.appendChild(button);
     return container;
 }
-
-let closeActiveModal: (() => void) | undefined;
 
 function escapeHtml(value: string): string {
     return value
@@ -211,7 +208,7 @@ function selectField<T extends string>(
     <label class="${styles.field}">
       <span class="${styles.label}">${escapeHtml(labelText)}</span>
       <span class="${styles.inputShell}">
-        <span class="size-4 shrink-0 text-white/45 [&_svg]:size-4">${iconHtml}</span>
+        <span class="size-3.5 shrink-0 text-zinc-500 [&_svg]:size-3.5">${iconHtml}</span>
         <select class="${styles.select}" name="${name}">${optionHtml}</select>
         <span class="${styles.chevron}">${icons.chevron}</span>
       </span>
@@ -246,13 +243,17 @@ function wallpaperCards(
     return `${presets}
     <label class="${styles.wallpaperCard}">
       <input class="${styles.wallpaperInput}" type="radio" name="wallpaperId" value="custom" ${hasCustomWallpaper ? "checked" : ""} />
-      <span class="${styles.wallpaperPreview} grid place-items-center border-dashed bg-white/[0.035]">
+      <span class="${styles.wallpaperPreview} grid place-items-center border-dashed border-zinc-800 bg-zinc-950">
         <span data-custom-preview class="absolute inset-0 bg-cover bg-center" style="${escapeHtml(previewStyle)}"></span>
-        <span class="grid size-9 place-items-center rounded-full border border-white/15 bg-white/[0.07] text-white/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] [&_svg]:size-4">${icons.plus}</span>
+        <span class="grid size-7 place-items-center rounded-md border border-zinc-800 bg-zinc-900 text-zinc-400 [&_svg]:size-3.5">${icons.plus}</span>
         <span class="${styles.wallpaperCheck}">${icons.checkCircle}</span>
       </span>
       <span class="${styles.wallpaperName}">Custom</span>
     </label>`;
+}
+
+function safeColor(value: string, fallback: string): string {
+    return COLOR_PATTERN.test(value) ? value : fallback;
 }
 
 function buildHTML(draft: DashboardSettings): string {
@@ -263,14 +264,14 @@ function buildHTML(draft: DashboardSettings): string {
       <header class="${styles.header}">
         <div>
           <h2 id="sm-title" class="${styles.title}">Settings</h2>
-          <p class="${styles.subtitle}">Launcher, wallpaper, density, and backup controls</p>
+          <p class="${styles.subtitle}">Configure dashboard layout, background, and preferences</p>
         </div>
         <button class="${styles.close}" type="button" data-close aria-label="Close settings">${icons.x}</button>
       </header>
 
       <div class="${styles.body}">
         <section class="${styles.section}">
-          <h3 class="${styles.sectionTitle}">Dashboard</h3>
+          <h3 class="${styles.sectionTitle}">Dashboard Layout</h3>
           <div class="${styles.fieldGrid}">
             ${selectField("Default view", "dashboardView", draft.dashboardView, icons.grid, DASHBOARD_VIEW_OPTIONS)}
             ${selectField("Grid rows", "gridRows", gridRows, icons.grid, GRID_ROW_OPTIONS)}
@@ -285,11 +286,11 @@ function buildHTML(draft: DashboardSettings): string {
             ${wallpaperCards(draft.wallpaperId, draft.wallpaperUrl)}
           </div>
 
-          <div class="mt-4 grid gap-3">
+          <div class="mt-4 grid gap-3 sm:grid-cols-2">
             <label class="${styles.field}">
-              <span class="${styles.label}">Wallpaper image file</span>
+              <span class="${styles.label}">Custom wallpaper</span>
               <span class="${styles.fileButton}">
-                ${icons.upload} Choose image
+                ${icons.upload} Choose file
                 <input type="file" accept="image/*" data-wallpaper-file class="hidden" />
               </span>
             </label>
@@ -320,6 +321,8 @@ function buildHTML(draft: DashboardSettings): string {
       </footer>
     </form>`;
 }
+
+let closeActiveModal: (() => void) | undefined;
 
 function bindWallpaperFile(root: HTMLElement, signal: AbortSignal): void {
     const fileInput = root.querySelector<HTMLInputElement>(
@@ -380,10 +383,6 @@ function optionValue<T extends string>(
     return options.some((option) => option.value === value)
         ? (value as T)
         : fallback;
-}
-
-function safeColor(value: string, fallback: string): string {
-    return COLOR_PATTERN.test(value) ? value : fallback;
 }
 
 function safeWallpaperId(value: string, fallback: string): string {

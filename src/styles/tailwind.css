@@ -1,91 +1,89 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "MyTab Sans";
-  src:
-    local("Inter Variable"),
-    local("Inter"),
-    local("SF Pro Display"),
-    local("Segoe UI Variable"),
-    local("Segoe UI");
-  font-display: swap;
-}
-
 @theme {
-  --font-sans: "MyTab Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-sans:
+        "Inter Variable", Inter, "SF Pro Display", "Segoe UI Variable",
+        "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 
-  --ease-mytab-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-mytab-soft: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
-  --animate-mytab-view-in: mytab-view-in 200ms var(--ease-mytab-out) backwards;
-  --animate-mytab-tile-in: mytab-tile-in 260ms var(--ease-mytab-soft) backwards;
+    --animate-view-in: mytab-view-in 200ms var(--ease-out) backwards;
+    --animate-tile-in: mytab-tile-in 260ms var(--ease-soft) backwards;
 }
 
 @keyframes mytab-view-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
 }
 
 @keyframes cardIn {
-
-  to {
-    opacity: 1;
-    transform:
-      translateY(0) scale(1);
-
-  }
-
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 @keyframes mytab-tile-in {
-  from {
-    opacity: 0;
-    transform: translateY(7px) scale(0.992);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(7px) scale(0.992);
+    }
+}
+
+@keyframes context-menu-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.context-menu {
+    animation: context-menu-in 150ms var(--ease-out) backwards;
 }
 
 .bookmark-card {
-  opacity: 0;
-  transform:
-    translateY(10px) scale(.96);
-  animation:
-    cardIn .45s cubic-bezier(.2, .8, .2, 1) forwards;
-  animation-delay:
-    calc(var(--item-index) * 35ms);
+    opacity: 0;
+    transform: translateY(10px) scale(0.96);
+    animation: cardIn 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: calc(var(--item-index) * 30ms);
 }
 
 .section-header {
-  animation: var(--animate-mytab-view-in);
+    animation: var(--animate-mytab-view-in);
 }
 
 .folder-card,
 .add-favorite-card,
 .empty-surface {
-  animation: var(--animate-mytab-tile-in);
-  animation-delay: calc(var(--item-index, 0) * 14ms);
+    animation: var(--animate-mytab-tile-in);
+    animation-delay: calc(var(--item-index, 0) * 14ms);
 }
-
 
 .folder-card,
 .add-favorite-card {
-  transition-duration: 180ms;
-  transition-timing-function: var(--ease-mytab-soft);
+    transition-duration: 180ms;
+    transition-timing-function: var(--ease-mytab-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .section-header,
+    .folder-card,
+    .add-favorite-card,
+    .empty-surface {
+        animation: none;
+        transform: none;
+    }
 
-  .section-header,
-  .folder-card,
-  .add-favorite-card,
-  .empty-surface {
-    animation: none;
-    transform: none;
-  }
-
-  .folder-card,
-  .add-favorite-card {
-    transition-duration: 1ms;
-  }
+    .folder-card,
+    .add-favorite-card {
+        transition-duration: 1ms;
+    }
 }
