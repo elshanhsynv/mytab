@@ -1,7 +1,5 @@
-// bookmark-card.ts
 import type { BookmarkItem } from "../types";
 import { getIconUrl, getInitialAvatar } from "../services/favicon";
-import { icons } from "./icons";
 
 const styles = {
     card: "bookmark-card group relative flex w-full flex-col items-center justify-center rounded-2xl bg-white/[0.08] text-center text-white backdrop-blur-xl shadow-lg shadow-black/10 ring-1 ring-white/5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.12] hover:shadow-2xl hover:shadow-violet-950/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 active:scale-[0.98]",
@@ -27,10 +25,6 @@ const styles = {
     pinBadge:
         "absolute left-3 top-3 size-2 rounded-full bg-violet-300 shadow-[0_0_12px_rgba(196,181,253,.8)]",
 
-    actions:
-        "absolute right-2 top-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 text-violet-200 [&_svg]:size-4",
-
-    dragging: "opacity-50 scale-105",
 };
 
 export function createBookmarkCard(
@@ -80,31 +74,7 @@ export function createBookmarkCard(
         icon.src = getInitialAvatar(bookmark.title);
     });
 
-    // const scale = 0.9;
-
-    // wrapper.style.transform = `scale(${scale})`;
-
     wrapper.append(icon);
-
-    // icon.addEventListener("error", () => {
-    //     const fallback = getFaviconFallback(bookmark.url);
-
-    //     if (icon.src !== fallback && fallback) {
-    //         icon.src = fallback;
-    //         return;
-    //     }
-
-    //     icon.onerror = () => {
-    //         if (icon.src !== fallback) {
-    //             icon.src = fallback;
-    //         } else {
-    //             icon.onerror = null;
-    //             icon.src = getInitialAvatar(bookmark.title);
-    //         }
-    //     };
-
-    //     icon.src = getInitialAvatar(bookmark.title);
-    // });
 
     const title = document.createElement("span");
     title.className = `${styles.title} ${
@@ -116,16 +86,8 @@ export function createBookmarkCard(
     if (bookmark.pinned) {
         const pin = document.createElement("span");
         pin.className = styles.pinBadge;
-        pin.innerHTML = icons.pin;
         pin.title = "Pinned";
         card.append(pin);
-    }
-
-    if (bookmark.pinned) {
-        const pinIndicator = document.createElement("span");
-        pinIndicator.className = styles.actions;
-        pinIndicator.innerHTML = `<span title="Pinned">${icons.pin}</span>`;
-        card.append(pinIndicator);
     }
 
     card.title = getDomain(bookmark.url);

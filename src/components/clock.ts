@@ -25,12 +25,6 @@ export function createClock(settings: DashboardSettings): HTMLElement {
     if (settings.showClock) {
       time.hidden = false;
       time.dateTime = now.toISOString();
-      // const timeText = now.toLocaleTimeString([], {
-      //   hour: 'numeric',
-      //   minute: '2-digit',
-      //   hour12: settings.clockFormat === '12h',
-      // });
-      // const [clockText, period] = timeText.split(' ');
       const parts = new Intl.DateTimeFormat([], {
         hour: "numeric",
         minute: "2-digit",

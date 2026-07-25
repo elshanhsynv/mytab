@@ -1,5 +1,5 @@
-import type { AppState, StateKey, StateListener } from '../types/index';
-import { APP_CONFIG } from '../config';
+import type { AppState, StateKey, StateListener } from "../types/index";
+import { APP_CONFIG } from "../config";
 
 class StateManager {
   private state: AppState = {
@@ -7,8 +7,8 @@ class StateManager {
     favorites: [],
     folders: [],
     pinnedIds: [],
-    searchQuery: '',
-    activeFolderId: '',
+    searchQuery: "",
+    activeFolderId: "",
     settings: { ...APP_CONFIG.DEFAULTS.settings },
     recentlyVisited: [],
   };

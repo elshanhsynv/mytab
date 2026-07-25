@@ -24,7 +24,7 @@ function extensionManifestPlugin() {
                 name: "My Tab",
                 version: "1.0",
                 description: "A fast, polished custom favorites dashboard.",
-                permissions: ["bookmarks", "storage", "favicon", "tabs"],
+                permissions: ["bookmarks", "storage", "favicon"],
                 chrome_url_overrides: {
                     newtab: "src/pages/newtab.html",
                 },

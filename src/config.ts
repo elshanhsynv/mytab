@@ -11,8 +11,6 @@ export type WallpaperConfig = {
 export const APP_CONFIG = {
     STORAGE_KEYS: {
         SETTINGS: "mytab_settings",
-        BOOKMARKS: "mytab_bookmarks",
-        FOLDERS: "mytab_folders",
         FAVORITES: "mytab_favorites",
         PINNED: "mytab_pinned",
         RECENT: "mytab_recent",
@@ -107,27 +105,15 @@ export const APP_CONFIG = {
                 "radial-gradient(circle at 18% 22%, rgba(239, 68, 68, 0.38), transparent 28%), radial-gradient(circle at 82% 78%, rgba(249, 115, 22, 0.3), transparent 34%), radial-gradient(circle at 50% 100%, rgba(120, 53, 15, 0.18), transparent 48%), linear-gradient(135deg, #120909 0%, #2b0a03 45%, #09090b 100%)",
         },
     ] satisfies WallpaperConfig[],
-    FAVICON_API: "https://www.google.com/s2/favicons?domain={domain}&sz=64",
-    FAVICON_FALLBACK: "https://icons.duckduckgo.com/ip3/{domain}.ico",
-    ANIMATION: {
-        STAGGER_DELAY: 30,
-        MAX_STAGGER: 10,
-    },
     GRID: {
         COLUMNS: 7,
         DEFAULT_ROWS: 4,
         MAX_ROWS: 5,
-        MAX_ITEMS: 35,
-        TILE_SIZE: 112,
-        GAP: 16,
     },
     SEARCH: {
         DEBOUNCE_MS: 200,
     },
     RECENT: {
         MAX_ITEMS: 8,
-    },
-    FAVORITES: {
-        FOLDER_ID: "mytab-favorites",
     },
 };
