@@ -2,7 +2,7 @@
 import type { BookmarkItem } from '../types';
 import { createBookmarkCard } from './bookmark-card';
 
-const MAX_STAGGER_INDEX = 10;
+export const MAX_STAGGER_INDEX = 10;
 
 export function createBookmarkGrid(
   bookmarks: BookmarkItem[],
