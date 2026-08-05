@@ -17,7 +17,6 @@ export function sanitizeSettings(value: unknown): DashboardSettings {
     dashboardView,
     wallpaperId: typeof settings.wallpaperId === 'string' ? settings.wallpaperId : APP_CONFIG.DEFAULTS.settings.wallpaperId,
     wallpaperUrl: typeof settings.wallpaperUrl === 'string' ? settings.wallpaperUrl : APP_CONFIG.DEFAULTS.settings.wallpaperUrl,
-    accentColor: typeof settings.accentColor === 'string' ? settings.accentColor : APP_CONFIG.DEFAULTS.settings.accentColor,
     clockFormat: optionFrom(settings.clockFormat, ['12h', '24h'], APP_CONFIG.DEFAULTS.settings.clockFormat),
     showGreeting: typeof settings.showGreeting === 'boolean' ? settings.showGreeting : APP_CONFIG.DEFAULTS.settings.showGreeting,
     showClock: typeof settings.showClock === 'boolean' ? settings.showClock : APP_CONFIG.DEFAULTS.settings.showClock,
@@ -42,7 +41,6 @@ export function getSettingsForStorage(settings: DashboardSettings): Omit<Dashboa
   return {
     dashboardView: settings.dashboardView,
     wallpaperId: settings.wallpaperId,
-    accentColor: settings.accentColor,
     clockFormat: settings.clockFormat,
     showGreeting: settings.showGreeting,
     showClock: settings.showClock,

@@ -23,7 +23,6 @@ export interface DashboardSettings {
   dashboardView: 'favorites' | 'bookmarks' | 'folders';
   wallpaperId: string;
   wallpaperUrl: string;
-  accentColor: string;
   clockFormat: '12h' | '24h';
   showGreeting: boolean;
   showClock: boolean;
