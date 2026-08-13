@@ -1,5 +1,4 @@
 import { APP_CONFIG } from "../config";
-import { showToast } from "../dashboard/toast";
 import {
     getWallpaperOptions,
     getWallpaperPreview,
