@@ -1,4 +1,5 @@
 import { APP_CONFIG } from "../config";
+import { showToast } from "../dashboard/toast";
 import {
     getWallpaperOptions,
     getWallpaperPreview,
@@ -332,14 +333,16 @@ function bindWallpaperSelection(
             () => {
                 if (!radio.checked) return;
 
-                if (radio.value !== "custom") {
-                    const urlInput = root.querySelector<HTMLInputElement>(
-                        "[data-wallpaper-url]",
-                    );
+                const urlInput = root.querySelector<HTMLInputElement>(
+                    "[data-wallpaper-url]",
+                );
 
-                    if (urlInput) {
-                        urlInput.value = "";
-                    }
+                if (radio.value === "custom") {
+                    return;
+                }
+
+                if (urlInput) {
+                    urlInput.value = "";
                 }
             },
             { signal },
