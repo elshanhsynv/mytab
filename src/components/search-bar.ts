@@ -6,7 +6,7 @@ const SEARCH_PLACEHOLDER = "Search the web or type a URL";
 
 const styles = {
     wrapper:
-        "group mt-6 flex h-14 w-full max-w-xl items-center gap-3 rounded-2xl bg-white/10 px-5 backdrop-blur-md transition focus-within:border focus-within:border-violet-400/60 sm:mt-8 sm:h-16",
+        "group relative mt-6 flex h-14 w-full max-w-xl items-center gap-3 rounded-2xl bg-white/10 px-5 backdrop-blur-md transition focus-within:border focus-within:border-violet-400/60 sm:mt-8 sm:h-16",
     srOnly: "sr-only",
     icon: "flex size-5 shrink-0 text-white/70",
     input:
@@ -28,6 +28,8 @@ export function createSearchBar(
     wrapper.className = styles.wrapper;
     wrapper.setAttribute("role", "search");
 
+
+
     wrapper.innerHTML = `
         <label class="${styles.srOnly}" for="${inputId}">
             ${SEARCH_PLACEHOLDER}
@@ -44,6 +46,10 @@ export function createSearchBar(
             placeholder="${SEARCH_PLACEHOLDER}"
             autocomplete="off"
             spellcheck="false"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls="${inputId}-suggestions"
         />
 
         <span class="${styles.shortcut}" aria-hidden="true">
@@ -57,6 +63,12 @@ export function createSearchBar(
         >
             ${icons.x}
         </button>
+
+        <div
+            id="${inputId}-suggestions"
+            role="listbox"
+            class="absolute left-0 right-0 top-full z-50 mt-2 hidden overflow-hidden rounded-2xl bg-black/70 p-2 backdrop-blur-xl"
+        ></div>
     `;
 
     const input = wrapper.querySelector<HTMLInputElement>("input");
@@ -77,7 +89,6 @@ export function createSearchBar(
 
     input.addEventListener("input", () => {
         updateClearButton();
-        emit(input.value);
     });
 
     input.addEventListener("keydown", (event) => {
@@ -87,16 +98,20 @@ export function createSearchBar(
                     return;
                 }
 
-                emit.cancel();
                 input.value = "";
                 updateClearButton();
-                onSearch("");
                 break;
 
-            case "Enter":
-                emit.flush();
-                onSearch(input.value);
+            case "Enter": {
+                const query = input.value.trim();
+
+                if (!query) {
+                    return;
+                }
+
+                onSearch(query);
                 break;
+            }
         }
     });
 

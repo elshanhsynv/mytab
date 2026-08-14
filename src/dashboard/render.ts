@@ -13,6 +13,7 @@ import { state } from "../core/state";
 import { bookmarkService } from "../services/bookmarks";
 import { getWallpaperBackground } from "../services/wallpapers";
 import type { AppState, DashboardSettings } from "../types";
+import { searchOrNavigate } from "../utils/helpers";
 import {
     getDashboardFolders,
     getGridItemCount,
@@ -69,7 +70,9 @@ export function applyAppearance(settings: DashboardSettings): void {
     );
 }
 
-function createDashboardShell(settings: DashboardSettings): HTMLElement {
+function createDashboardShell(
+    settings: DashboardSettings,
+): HTMLElement {
     const dashboard = document.createElement("main");
     dashboard.className = styles.dashboard;
 
@@ -83,7 +86,11 @@ function createDashboardShell(settings: DashboardSettings): HTMLElement {
     hero.append(createClock(settings));
 
     if (settings.showSearch) {
-        hero.append(createSearchBar((query) => state.set("searchQuery", query)));
+        hero.append(
+            createSearchBar(
+                searchOrNavigate,
+            ),
+        );
     }
 
     const content = document.createElement("div");
@@ -91,6 +98,7 @@ function createDashboardShell(settings: DashboardSettings): HTMLElement {
     content.dataset.dashboardContent = "true";
 
     dashboard.append(header, hero, content);
+
     return dashboard;
 }
 
