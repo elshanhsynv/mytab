@@ -6,7 +6,7 @@ const SEARCH_PLACEHOLDER = "Search the web or type a URL";
 
 const styles = {
     wrapper:
-        "group mt-6 flex h-14 w-full max-w-xl items-center gap-3 rounded-2xl bg-white/10 px-5 shadow-2xl shadow-violet-950/30 backdrop-blur-md transition focus-within:border focus-within:border-violet-400/60 sm:mt-8 sm:h-16",
+        "group mt-6 flex h-14 w-full max-w-xl items-center gap-3 rounded-2xl bg-white/10 px-5 backdrop-blur-md transition focus-within:border focus-within:border-violet-400/60 sm:mt-8 sm:h-16",
     srOnly: "sr-only",
     icon: "flex size-5 shrink-0 text-white/70",
     input:

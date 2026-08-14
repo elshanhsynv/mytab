@@ -53,18 +53,18 @@ const WALLPAPER_QUALITY = 0.82;
 
 const styles = {
     settingsButton:
-        "inline-flex size-9 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-indigo-500 [&_svg]:size-4",
-    settingsContainer: "relative",
+        "inline-flex size-10 items-center justify-center rounded-2xl [&_svg]:size-4",
+    settingsContainer: "relative rounded-2xl bg-white/10 backdrop-blur-md transition hover:bg-white/15 hover:scale-105",
     overlay:
         "fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 transition-opacity sm:p-6",
     panel:
-        "w-full max-w-2xl overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 text-zinc-100 shadow-xl outline-none",
+        "w-full max-w-2xl overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 text-zinc-100 outline-none",
     header:
         "flex items-center justify-between border-b border-zinc-800 px-6 py-4",
     title: "m-0 text-base font-semibold text-zinc-100",
     subtitle: "mt-0.5 text-xs text-zinc-400",
     close:
-        "inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-800/40 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 focus:outline-none focus:ring-2 focus:ring-zinc-700 [&_svg]:size-4",
+        "inline-flex size-8 shrink-0 items-center justify-center rounded-lg border border-zinc-800 bg-zinc-800/40 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200 [&_svg]:size-4",
     body: "flex max-h-[70vh] flex-col gap-5 overflow-y-auto p-6 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-700",
     section: "rounded-xl border border-zinc-800/80 bg-zinc-950/40 p-4",
     sectionTitle:

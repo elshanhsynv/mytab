@@ -12,7 +12,6 @@ const styles = {
         "bg-zinc-900/95",
         "backdrop-blur-md",
         "p-1",
-        "shadow-xl shadow-black/40",
         "animate-in fade-in zoom-in-95 duration-100",
     ].join(" "),
 

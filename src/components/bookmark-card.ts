@@ -2,7 +2,7 @@ import type { BookmarkItem } from "../types";
 import { getIconUrl, getInitialAvatar } from "../services/favicon";
 
 const styles = {
-    card: "bookmark-card group relative flex w-full flex-col items-center justify-center rounded-2xl bg-white/[0.08] text-center text-white backdrop-blur-xl shadow-lg shadow-black/10 ring-1 ring-white/5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.12] hover:shadow-2xl hover:shadow-violet-950/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300 active:scale-[0.98]",
+    card: "bookmark-card group relative flex w-full flex-col items-center justify-center rounded-2xl bg-white/[0.08] text-center text-white backdrop-blur-xl ring-1 ring-white/5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.12] active:scale-[0.98]",
 
     comfortable: "gap-3 py-3",
     compact: "gap-2 py-2",

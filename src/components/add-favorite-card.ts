@@ -7,8 +7,8 @@ const styles = {
     "items-center justify-center rounded-2xl",
     "border border-white/15 bg-white/10",
     "text-center text-white",
-    "shadow-lg shadow-black/10 backdrop-blur-xl ring-1 ring-white/10 transition duration-200",
-    "hover:-translate-y-1 hover:border-white/25 hover:bg-white/15 hover:shadow-2xl hover:shadow-violet-950/20",
+    "backdrop-blur-xl ring-1 ring-white/10 transition duration-200",
+    "hover:-translate-y-1 hover:border-white/25 hover:bg-white/15",
     "focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300",
     "",
   ].join(" "),
@@ -45,7 +45,7 @@ export function createAddFavoriteCard(
 
   const title = document.createElement("span");
   title.className = `${styles.addFavoriteTitle} ${isCompact ? "text-[11px]" : "text-xs"}`;
-  title.textContent = "Add site";
+  title.textContent = "Add shortcut";
 
   card.append(icon, title);
   return card;

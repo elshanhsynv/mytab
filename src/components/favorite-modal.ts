@@ -19,9 +19,9 @@ const CLOSE_ANIMATION_FALLBACK_MS = 200;
 
 const styles = {
   overlay:
-    "favorite-modal favorite-modal-overlay fixed inset-0 z-[55] grid place-items-center bg-black/60 p-4 transition-opacity",
+    "favorite-modal favorite-modal-overlay fixed inset-0 z-[55] grid place-items-center bg-black/60 p-4 transition-opacity ",
   panel:
-    "w-full max-w-md overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 text-zinc-100 shadow-2xl outline-none",
+    "w-full max-w-md overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 text-zinc-100 outline-none",
   header:
     "flex items-start justify-between gap-4 border-b border-zinc-800 px-6 py-5",
   title: "m-0 text-base font-semibold tracking-tight text-zinc-100",
