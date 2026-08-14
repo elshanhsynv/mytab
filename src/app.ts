@@ -1,6 +1,7 @@
 import "./styles/tailwind.css";
 
 import { initDashboard } from "./dashboard/startup";
+import { handleDashboardKeydown } from "./utils/helpers";
 
 async function bootstrap(): Promise<void> {
     const root = document.querySelector<HTMLElement>("#app");
@@ -10,6 +11,7 @@ async function bootstrap(): Promise<void> {
     }
 
     try {
+        document.addEventListener("keydown", handleDashboardKeydown);
         await initDashboard(root);
     } catch (error) {
         console.error("Failed to initialize dashboard.", error);
