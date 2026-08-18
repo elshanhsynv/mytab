@@ -5,8 +5,10 @@ import {
 } from "../components/bookmark-grid";
 import { createClock } from "../components/clock";
 import { gridClass, renderFoldersView } from "../components/folder-view";
+import { createGreeting } from "../components/greeting";
 import { createSearchBar } from "../components/search-bar";
 import { createSection } from "../components/section";
+
 import { createSettingsButton } from "../components/settings-modal";
 import { createViewSwitch } from "../components/view-switch";
 import { state } from "../core/state";
@@ -77,19 +79,29 @@ function createDashboardShell(
     dashboard.className = styles.dashboard;
 
     const header = document.createElement("header");
-    header.className = styles.header;
+
+    header.className = [
+        styles.header,
+        settings.showGreeting
+            ? styles.headerWithGreeting
+            : styles.headerWithoutGreeting,
+    ].join(" ");
+
+    if (settings.showGreeting) {
+        header.append(createGreeting(settings));
+    }
+
     header.append(createSettingsButton());
 
     const hero = document.createElement("div");
     hero.className = styles.hero;
     hero.dataset.dashboardHero = "true";
+
     hero.append(createClock(settings));
 
     if (settings.showSearch) {
         hero.append(
-            createSearchBar(
-                searchOrNavigate,
-            ),
+            createSearchBar(searchOrNavigate),
         );
     }
 

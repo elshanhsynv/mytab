@@ -2,7 +2,7 @@ import { DASHBOARD_VIEWS, VIEW_LABELS } from "../dashboard/types";
 import type { DashboardView } from "../dashboard/types";
 
 const styles = {
-  switcher: "mx-auto flex w-max pb-3",
+  switcher: "mx-auto flex w-max pb-3 mt-3",
 
   button:
     "relative px-6 py-1.5 text-lg font-medium text-white/60 transition-colors duration-200 " +
