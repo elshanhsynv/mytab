@@ -1,3 +1,5 @@
+import type { SearchEngineId } from "../config";
+
 export interface BookmarkItem {
   id: string;
   title: string;
@@ -29,6 +31,7 @@ export interface DashboardSettings {
   showSearch: boolean;
   gridRows: number;
   cardDensity: 'comfortable' | 'compact';
+  defaultSearchEngine: SearchEngineId;
   userName: string;
 }
 

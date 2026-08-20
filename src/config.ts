@@ -1,3 +1,13 @@
+export const SEARCH_ENGINE_IDS = [
+    "google",
+    "bing",
+    "duckduckgo",
+    "brave",
+] as const;
+
+export type SearchEngineId =
+    (typeof SEARCH_ENGINE_IDS)[number];
+
 export const isExtension =
     typeof chrome !== "undefined" && !!chrome?.runtime?.id;
 
@@ -32,6 +42,7 @@ export const APP_CONFIG = {
             showSearch: true,
             gridRows: 4,
             cardDensity: "compact" as const,
+            defaultSearchEngine: "google" as SearchEngineId,
             userName: "",
         },
     },

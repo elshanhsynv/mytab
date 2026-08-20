@@ -15,7 +15,6 @@ import { state } from "../core/state";
 import { bookmarkService } from "../services/bookmarks";
 import { getWallpaperBackground } from "../services/wallpapers";
 import type { AppState, DashboardSettings } from "../types";
-import { searchOrNavigate } from "../utils/helpers";
 import {
     getDashboardFolders,
     getGridItemCount,
@@ -100,9 +99,7 @@ function createDashboardShell(
     hero.append(createClock(settings));
 
     if (settings.showSearch) {
-        hero.append(
-            createSearchBar(searchOrNavigate),
-        );
+        hero.append(createSearchBar());
     }
 
     const content = document.createElement("div");

@@ -24,6 +24,11 @@ export function sanitizeSettings(value: unknown): DashboardSettings {
     userName: typeof settings.userName === 'string' ? settings.userName : APP_CONFIG.DEFAULTS.settings.userName,
     gridRows: Math.min(APP_CONFIG.GRID.MAX_ROWS, Math.max(1, gridRows || APP_CONFIG.GRID.DEFAULT_ROWS)),
     cardDensity: settings.cardDensity === 'compact' ? 'compact' : 'comfortable',
+    defaultSearchEngine: optionFrom(
+      settings.defaultSearchEngine,
+      ['google', 'bing', 'duckduckgo', 'brave'],
+      APP_CONFIG.DEFAULTS.settings.defaultSearchEngine,
+    ),
   };
 }
 
@@ -47,6 +52,7 @@ export function getSettingsForStorage(settings: DashboardSettings): Omit<Dashboa
     showSearch: settings.showSearch,
     gridRows: settings.gridRows,
     cardDensity: settings.cardDensity,
+    defaultSearchEngine: settings.defaultSearchEngine,
     userName: settings.userName,
   };
 }

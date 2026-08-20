@@ -1,9 +1,15 @@
 import { APP_CONFIG, EXTENSION_AUTHOR, EXTENSION_DESCRIPTION, EXTENSION_NAME, EXTENSION_VERSION } from "../config";
+import type { SearchEngineId } from "../config";
+import { SEARCH_ENGINE_OPTIONS } from "../scripts/search-engines";
 import {
     getWallpaperOptions,
     getWallpaperPreview,
 } from "../services/wallpapers";
 import type { DashboardSettings } from "../types";
+import {
+    createDropdown,
+    type Dropdown,
+} from "./dropdown";
 import { icons } from "./icons";
 
 export type MaybePromise<T> = T | Promise<T>;
@@ -20,7 +26,20 @@ type SelectOption<T extends string = string> = {
     value: T;
 };
 
-type SelectName = "dashboardView" | "gridRows" | "cardDensity" | "clockFormat";
+type DropdownName =
+    | "dashboardView"
+    | "gridRows"
+    | "cardDensity"
+    | "clockFormat"
+    | "defaultSearchEngine";
+
+type SettingsDropdowns = {
+    dashboardView?: Dropdown<DashboardSettings["dashboardView"]>;
+    gridRows?: Dropdown<string>;
+    cardDensity?: Dropdown<DashboardSettings["cardDensity"]>;
+    clockFormat?: Dropdown<DashboardSettings["clockFormat"]>;
+    defaultSearchEngine?: Dropdown<SearchEngineId>;
+};
 
 type SectionId = "dashboard" | "appearance" | "about";
 
@@ -119,11 +138,8 @@ const styles = {
     label: "text-xs font-medium text-zinc-300",
     inputShell:
         "flex h-9 items-center gap-2.5 rounded-lg border border-zinc-800 bg-zinc-950 px-3 transition-colors focus-within:border-zinc-700 focus-within:ring-1 focus-within:ring-zinc-700",
-    select:
-        "h-full min-w-0 flex-1 cursor-pointer appearance-none bg-transparent text-xs font-medium text-zinc-200 outline-none [&_option]:bg-zinc-900 [&_option]:text-zinc-200",
     textInput:
         "h-full min-w-0 flex-1 bg-transparent text-xs font-medium text-zinc-200 outline-none placeholder:text-zinc-600",
-    chevron: "pointer-events-none size-3.5 shrink-0 text-zinc-500",
 
     subsection: "flex flex-col gap-3",
     subheading: "text-[11px] font-medium uppercase tracking-wider text-zinc-500",
@@ -258,31 +274,15 @@ function isImageFile(file: File): boolean {
     return file.type === "" || file.type.startsWith("image/");
 }
 
-function selectField<T extends string>(
+function dropdownField(
     labelText: string,
-    name: SelectName,
-    current: T,
-    iconHtml: string,
-    options: readonly SelectOption<T>[],
+    name: DropdownName,
 ): string {
-    const optionHtml = options
-        .map(
-            (option) => `
-    <option value="${escapeHtml(option.value)}" ${option.value === current ? "selected" : ""}>
-      ${escapeHtml(option.label)}
-    </option>`,
-        )
-        .join("");
-
     return `
-    <label class="${styles.field}">
+    <div class="${styles.field}">
       <span class="${styles.label}">${escapeHtml(labelText)}</span>
-      <span class="${styles.inputShell}">
-        <span class="size-3.5 shrink-0 text-zinc-500 [&_svg]:size-3.5">${iconHtml}</span>
-        <select class="${styles.select}" name="${name}">${optionHtml}</select>
-        <span class="${styles.chevron}">${icons.chevron}</span>
-      </span>
-    </label>`;
+      <div data-settings-dropdown="${name}"></div>
+    </div>`;
 }
 
 function toggleRow(
@@ -357,18 +357,17 @@ function wallpaperCards(
 }
 
 function buildDashboardSection(draft: DashboardSettings): string {
-    const gridRows = String(clampRows(draft.gridRows));
-
     return `
     <section data-panel="dashboard" class="${styles.panelSection}">
       <h3 class="${styles.sectionHeading}">Dashboard layout</h3>
       <p class="${styles.sectionSubtitle}">Customize how your dashboard looks and behaves.</p>
 
       <div class="${styles.fieldGrid}">
-        ${selectField("Default view", "dashboardView", draft.dashboardView, icons.grid, DASHBOARD_VIEW_OPTIONS)}
-        ${selectField("Grid rows", "gridRows", gridRows, icons.grid, GRID_ROW_OPTIONS)}
-        ${selectField("Item density", "cardDensity", draft.cardDensity, icons.dots, CARD_DENSITY_OPTIONS)}
-        ${selectField("Clock format", "clockFormat", draft.clockFormat, icons.clock, CLOCK_FORMAT_OPTIONS)}
+        ${dropdownField("Default view", "dashboardView")}
+        ${dropdownField("Grid rows", "gridRows")}
+        ${dropdownField("Item density", "cardDensity")}
+        ${dropdownField("Clock format", "clockFormat")}
+        ${dropdownField("Default search engine", "defaultSearchEngine")}
       </div>
 
       <div class="${styles.subsection}">
@@ -614,11 +613,6 @@ function applyWallpaperToForm(
     );
 }
 
-function setSelectValue(form: HTMLFormElement, name: string, value: string): void {
-    const field = form.elements.namedItem(name);
-    if (field instanceof HTMLSelectElement) field.value = value;
-}
-
 function setCheckbox(form: HTMLFormElement, name: string, checked: boolean): void {
     const field = form.elements.namedItem(name);
     if (field instanceof HTMLInputElement) field.checked = checked;
@@ -634,11 +628,13 @@ function applySettingsToForm(
     root: HTMLElement,
     form: HTMLFormElement,
     settings: DashboardSettings,
+    dropdowns: SettingsDropdowns,
 ): void {
-    setSelectValue(form, "dashboardView", settings.dashboardView);
-    setSelectValue(form, "gridRows", String(clampRows(settings.gridRows)));
-    setSelectValue(form, "cardDensity", settings.cardDensity);
-    setSelectValue(form, "clockFormat", settings.clockFormat);
+    dropdowns.dashboardView?.setValue(settings.dashboardView);
+    dropdowns.gridRows?.setValue(String(clampRows(settings.gridRows)));
+    dropdowns.cardDensity?.setValue(settings.cardDensity);
+    dropdowns.clockFormat?.setValue(settings.clockFormat);
+    dropdowns.defaultSearchEngine?.setValue(settings.defaultSearchEngine);
 
     setCheckbox(form, "showGreeting", settings.showGreeting);
     setCheckbox(form, "showClock", settings.showClock);
@@ -712,6 +708,15 @@ function readSettingsFromForm(
             CARD_DENSITY_OPTIONS,
             draft.cardDensity,
         ),
+        defaultSearchEngine: optionValue(
+            getFormString(
+                data,
+                "defaultSearchEngine",
+                draft.defaultSearchEngine,
+            ),
+            SEARCH_ENGINE_OPTIONS,
+            draft.defaultSearchEngine,
+        ),
         wallpaperId,
         wallpaperUrl,
         gridRows: clampRows(
@@ -721,6 +726,88 @@ function readSettingsFromForm(
         showClock: getFormBoolean(data, "showClock"),
         showSearch: getFormBoolean(data, "showSearch"),
         userName: getFormString(data, "userName", draft.userName).trim(),
+    };
+}
+
+function mountDropdown<T extends string>(
+    root: HTMLElement,
+    name: DropdownName,
+    ariaLabel: string,
+    options: readonly SelectOption<T>[],
+    value: T,
+    iconHtml: string,
+    signal: AbortSignal,
+): Dropdown<T> | undefined {
+    const host = root.querySelector<HTMLElement>(
+        `[data-settings-dropdown="${name}"]`,
+    );
+    if (!host) return undefined;
+
+    const dropdown = createDropdown({
+        ariaLabel,
+        name,
+        options,
+        value,
+        variant: "settings",
+        iconHtml,
+    });
+
+    host.append(dropdown.element);
+    signal.addEventListener("abort", dropdown.destroy, { once: true });
+    return dropdown;
+}
+
+function mountSettingsDropdowns(
+    root: HTMLElement,
+    settings: DashboardSettings,
+    signal: AbortSignal,
+): SettingsDropdowns {
+    return {
+        dashboardView: mountDropdown(
+            root,
+            "dashboardView",
+            "Default view",
+            DASHBOARD_VIEW_OPTIONS,
+            settings.dashboardView,
+            icons.grid,
+            signal,
+        ),
+        gridRows: mountDropdown(
+            root,
+            "gridRows",
+            "Grid rows",
+            GRID_ROW_OPTIONS,
+            String(clampRows(settings.gridRows)),
+            icons.grid,
+            signal,
+        ),
+        cardDensity: mountDropdown(
+            root,
+            "cardDensity",
+            "Item density",
+            CARD_DENSITY_OPTIONS,
+            settings.cardDensity,
+            icons.dots,
+            signal,
+        ),
+        clockFormat: mountDropdown(
+            root,
+            "clockFormat",
+            "Clock format",
+            CLOCK_FORMAT_OPTIONS,
+            settings.clockFormat,
+            icons.clock,
+            signal,
+        ),
+        defaultSearchEngine: mountDropdown(
+            root,
+            "defaultSearchEngine",
+            "Default search engine",
+            SEARCH_ENGINE_OPTIONS,
+            settings.defaultSearchEngine,
+            icons.search,
+            signal,
+        ),
     };
 }
 
@@ -802,6 +889,12 @@ export function showSettingsModal(options: SettingsModalOptions): void {
     document.body.append(overlay);
     form.focus();
 
+    const dropdowns = mountSettingsDropdowns(
+        overlay,
+        draft,
+        controller.signal,
+    );
+
     overlay.querySelectorAll<HTMLElement>("[data-close]").forEach((element) => {
         element.addEventListener("click", close, { signal: controller.signal });
     });
@@ -855,6 +948,7 @@ export function showSettingsModal(options: SettingsModalOptions): void {
                 overlay,
                 form,
                 APP_CONFIG.DEFAULTS.settings as DashboardSettings,
+                dropdowns,
             );
         },
         { signal: controller.signal },

@@ -91,7 +91,9 @@ function subscribeState(appRoot: HTMLElement): Unsubscribe {
     state.subscribe('settings', (settings, previousSettings) => {
       void persistSettings(settings, previousSettings);
       applyAppearance(settings);
-      renderDashboard(appRoot);
+      if (settingsAffectDashboard(settings, previousSettings)) {
+        renderDashboard(appRoot);
+      }
     }),
     state.subscribe('recentlyVisited', (items) => {
       void persistSafely('recently visited items', () => storage.set(APP_CONFIG.STORAGE_KEYS.RECENT, items.slice(0, APP_CONFIG.RECENT.MAX_ITEMS)));
@@ -99,6 +101,26 @@ function subscribeState(appRoot: HTMLElement): Unsubscribe {
   ];
 
   return () => subscriptions.forEach((unsubscribe) => unsubscribe());
+}
+
+function settingsAffectDashboard(
+  settings: DashboardSettings,
+  previousSettings: DashboardSettings | undefined,
+): boolean {
+  if (!previousSettings) return true;
+
+  return (
+    settings.dashboardView !== previousSettings.dashboardView ||
+    settings.wallpaperId !== previousSettings.wallpaperId ||
+    settings.wallpaperUrl !== previousSettings.wallpaperUrl ||
+    settings.clockFormat !== previousSettings.clockFormat ||
+    settings.showGreeting !== previousSettings.showGreeting ||
+    settings.showClock !== previousSettings.showClock ||
+    settings.showSearch !== previousSettings.showSearch ||
+    settings.gridRows !== previousSettings.gridRows ||
+    settings.cardDensity !== previousSettings.cardDensity ||
+    settings.userName !== previousSettings.userName
+  );
 }
 
 async function persistSettings(settings: DashboardSettings, previousSettings?: DashboardSettings): Promise<void> {

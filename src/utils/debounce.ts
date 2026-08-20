@@ -1,5 +1,5 @@
 export interface DebouncedFunction<
-    T extends (...args: any[]) => any,
+    T extends (...args: never[]) => unknown,
 > {
     (...args: Parameters<T>): void;
     cancel(): void;
@@ -7,7 +7,7 @@ export interface DebouncedFunction<
 }
 
 export function debounce<
-    T extends (...args: any[]) => any,
+    T extends (...args: never[]) => unknown,
 >(
     fn: T,
     ms: number,

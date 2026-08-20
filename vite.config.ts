@@ -25,6 +25,9 @@ function extensionManifestPlugin() {
                 version: "1.0",
                 description: "A fast, polished custom favorites dashboard.",
                 permissions: ["bookmarks", "storage", "favicon"],
+                host_permissions: [
+                    "https://suggestqueries.google.com/*",
+                ],
                 chrome_url_overrides: {
                     newtab: "src/pages/newtab.html",
                 },
