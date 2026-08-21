@@ -13,7 +13,7 @@ export type DropdownOptions<T extends string> = {
     value: T;
     variant: DropdownVariant;
     name?: string;
-    iconHtml?: string;
+    iconHtml?: string | ((value: T) => string);
     onChange?: (value: T) => void;
 };
 
@@ -65,6 +65,9 @@ export function createDropdown<T extends string>(
     const trigger = document.createElement("button");
     const label = document.createElement("span");
     const chevron = document.createElement("span");
+    const getIconHtml = (value: T): string => typeof options.iconHtml === "function"
+        ? options.iconHtml(value)
+        : options.iconHtml ?? "";
     const leadingIcon = options.iconHtml ? document.createElement("span") : null;
     const menu = document.createElement("div");
     const input = options.name ? document.createElement("input") : null;
@@ -87,7 +90,7 @@ export function createDropdown<T extends string>(
 
     if (leadingIcon) {
         leadingIcon.className = styles.leadingIcon;
-        leadingIcon.innerHTML = options.iconHtml ?? "";
+        leadingIcon.innerHTML = getIconHtml(value);
         trigger.append(leadingIcon);
     }
 
@@ -131,6 +134,9 @@ export function createDropdown<T extends string>(
 
         value = next.value;
         label.textContent = next.label;
+        if (leadingIcon) {
+            leadingIcon.innerHTML = getIconHtml(next.value);
+        }
         if (input) {
             input.value = next.value;
         }
@@ -169,6 +175,13 @@ export function createDropdown<T extends string>(
         optionLabel.textContent = option.label;
         check.className = styles.check;
         check.innerHTML = icons.checkCircle;
+        const optionIconHtml = getIconHtml(option.value);
+        if (optionIconHtml) {
+            const optionIcon = document.createElement("span");
+            optionIcon.className = styles.leadingIcon;
+            optionIcon.innerHTML = optionIconHtml;
+            optionButton.append(optionIcon);
+        }
         optionButton.append(optionLabel, check);
         menu.append(optionButton);
     });

@@ -1,5 +1,4 @@
 import "./styles/tailwind.css";
-import "@tailwindplus/elements";
 
 import { initDashboard } from "./dashboard/startup";
 import { handleDashboardKeydown } from "./utils/helpers";

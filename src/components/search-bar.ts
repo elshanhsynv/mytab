@@ -1,16 +1,17 @@
-import { icons } from "./icons";
+import type { SearchEngineId } from "../config";
+import { state } from "../core/state";
+import { SearchController } from "../scripts/search-controller";
+import {
+    SEARCH_ENGINES,
+    SEARCH_ENGINE_OPTIONS,
+} from "../scripts/search-engines";
+import { searchOrNavigate } from "../scripts/search-or-navigate";
+import { SearchResultRenderer } from "../scripts/search-results";
 import {
     createDropdown,
     type Dropdown,
 } from "./dropdown";
-import {
-    SEARCH_ENGINE_OPTIONS,
-} from "../scripts/search-engines";
-import type { SearchEngineId } from "../config";
-import { state } from "../core/state";
-import { SearchController } from "../scripts/search-controller";
-import { SearchResultRenderer } from "../scripts/search-results";
-import { searchOrNavigate } from "../scripts/search-or-navigate";
+import { icons } from "./icons";
 
 const SEARCH_PLACEHOLDER = "Search the web or enter a URL";
 
@@ -113,6 +114,13 @@ export function createSearchBar(): HTMLElement {
         value: currentEngineId,
         variant: "search",
         onChange: selectEngine,
+        iconHtml: (engineId) => {
+            const engine = SEARCH_ENGINES[engineId];
+
+            return engine.icon
+                ? `<img src="${engine.icon}" alt="" aria-hidden="true" />`
+                : "";
+        },
     });
     searchEngineContainer.append(engineDropdown.element);
 
