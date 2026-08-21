@@ -59,15 +59,16 @@ export function createClock(settings: DashboardSettings): HTMLElement {
                 periodElement.textContent = period;
                 time.append(periodElement);
             }
+
+            date.textContent = now.toLocaleDateString([], {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+            });
         } else {
             time.hidden = true;
         }
 
-        date.textContent = now.toLocaleDateString([], {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-        });
     };
 
     render();
