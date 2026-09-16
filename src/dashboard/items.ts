@@ -1,9 +1,8 @@
-import { APP_CONFIG } from '../config';
 import type { AppState, BookmarkItem, Folder } from '../types';
+import { clampGridColumns, clampGridRows } from '../utils/dashboard-data';
 
-export function getGridItemCount(rows: number): number {
-  const safeRows = Math.min(APP_CONFIG.GRID.MAX_ROWS, Math.max(1, rows || APP_CONFIG.GRID.DEFAULT_ROWS));
-  return safeRows * APP_CONFIG.GRID.COLUMNS;
+export function getGridItemCount(rows: number, columns: number): number {
+  return clampGridRows(rows) * clampGridColumns(columns);
 }
 
 export function getDashboardItems(current: Pick<AppState, 'bookmarks' | 'favorites'>): BookmarkItem[] {

@@ -13,15 +13,16 @@ const styles = {
         "inline-flex items-center rounded-full gap-1.5 border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white/75 shadow-lg backdrop-blur-xl transition hover:bg-white/15 hover:text-white",
     folderTitle: "truncate text-sm font-semibold text-white/70",
     launcherGrid:
-        "mx-auto grid w-full justify-center gap-3 [grid-template-columns:repeat(3,minmax(0,92px))] sm:gap-4 sm:[grid-template-columns:repeat(5,minmax(0,104px))] lg:[grid-template-columns:repeat(7,minmax(0,112px))] xl:[grid-template-columns:repeat(7,minmax(0,118px))]",
+        "mx-auto grid w-full justify-center gap-3 [grid-template-columns:repeat(3,minmax(0,92px))] sm:gap-4 sm:[grid-template-columns:repeat(5,minmax(0,104px))] lg:[grid-template-columns:repeat(var(--grid-columns),minmax(0,112px))] xl:[grid-template-columns:repeat(var(--grid-columns),minmax(0,118px))]",
     launcherGridCompact:
-        "mx-auto grid w-full justify-center gap-2 [grid-template-columns:repeat(3,minmax(0,78px))] sm:gap-3 sm:[grid-template-columns:repeat(5,minmax(0,88px))] lg:[grid-template-columns:repeat(7,minmax(0,96px))] xl:[grid-template-columns:repeat(7,minmax(0,104px))]",
+        "mx-auto grid w-full justify-center gap-2 [grid-template-columns:repeat(3,minmax(0,78px))] sm:gap-3 sm:[grid-template-columns:repeat(5,minmax(0,88px))] lg:[grid-template-columns:repeat(var(--grid-columns),minmax(0,96px))] xl:[grid-template-columns:repeat(var(--grid-columns),minmax(0,104px))]",
 };
 
 export function renderFoldersView(
     folders: Folder[],
     activeFolderId: string,
     density: CardDensity,
+    columns: number,
 ): DocumentFragment {
     const fragment = document.createDocumentFragment();
     const activeFolder = folders.find((folder) => folder.id === activeFolderId);
@@ -35,6 +36,7 @@ export function renderFoldersView(
                     activeFolder.items,
                     gridClass(density),
                     density,
+                    columns,
                 ),
                 "No websites match your search.",
             ),

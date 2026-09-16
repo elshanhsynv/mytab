@@ -118,6 +118,7 @@ function settingsAffectDashboard(
     settings.showClock !== previousSettings.showClock ||
     settings.showSearch !== previousSettings.showSearch ||
     settings.gridRows !== previousSettings.gridRows ||
+    settings.gridColumns !== previousSettings.gridColumns ||
     settings.cardDensity !== previousSettings.cardDensity ||
     settings.userName !== previousSettings.userName
   );

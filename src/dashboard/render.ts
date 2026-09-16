@@ -49,6 +49,7 @@ export function renderSections(appRoot: HTMLElement): void {
                 visibleData.folders,
                 current.activeFolderId,
                 visibleData.settings.cardDensity,
+                visibleData.settings.gridColumns,
             ),
         );
     }
@@ -127,7 +128,7 @@ function getVisibleDashboardData(
 
     return {
         settings,
-        itemCount: getGridItemCount(settings.gridRows),
+        itemCount: getGridItemCount(settings.gridRows, settings.gridColumns),
         favorites,
         bookmarks,
         folders: getDashboardFolders(current, visibleBookmarkIds),
@@ -146,6 +147,7 @@ function renderFavoritesView(
         sites,
         gridClass(data.settings.cardDensity),
         data.settings.cardDensity,
+        data.settings.gridColumns,
     );
 
     if (
@@ -177,6 +179,7 @@ function renderBookmarksView(
             sites,
             gridClass(data.settings.cardDensity),
             data.settings.cardDensity,
+            data.settings.gridColumns,
         ),
         "No bookmarks match your search.",
     );

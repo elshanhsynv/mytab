@@ -6,6 +6,7 @@ import {
     getWallpaperPreview,
 } from "../services/wallpapers";
 import type { DashboardSettings } from "../types";
+import { clampGridColumns, clampGridRows } from "../utils/dashboard-data";
 import {
     createDropdown,
     type Dropdown,
@@ -29,6 +30,7 @@ type SelectOption<T extends string = string> = {
 type DropdownName =
     | "dashboardView"
     | "gridRows"
+    | "gridColumns"
     | "cardDensity"
     | "clockFormat"
     | "defaultSearchEngine";
@@ -36,6 +38,7 @@ type DropdownName =
 type SettingsDropdowns = {
     dashboardView?: Dropdown<DashboardSettings["dashboardView"]>;
     gridRows?: Dropdown<string>;
+    gridColumns?: Dropdown<string>;
     cardDensity?: Dropdown<DashboardSettings["cardDensity"]>;
     clockFormat?: Dropdown<DashboardSettings["clockFormat"]>;
     defaultSearchEngine?: Dropdown<SearchEngineId>;
@@ -69,8 +72,21 @@ const GRID_ROW_OPTIONS: readonly SelectOption<string>[] = Array.from(
     (_, index) => {
         const rows = MIN_SELECTABLE_GRID_ROWS + index;
         return {
-            label: `${rows} rows x ${APP_CONFIG.GRID.COLUMNS} cols`,
+            label: `${rows} rows`,
             value: String(rows),
+        };
+    },
+);
+
+const GRID_COLUMN_OPTIONS: readonly SelectOption<string>[] = Array.from(
+    {
+        length: APP_CONFIG.GRID.MAX_COLUMNS - APP_CONFIG.GRID.MIN_COLUMNS + 1,
+    },
+    (_, index) => {
+        const columns = APP_CONFIG.GRID.MIN_COLUMNS + index;
+        return {
+            label: `${columns} columns`,
+            value: String(columns),
         };
     },
 );
@@ -211,11 +227,6 @@ function escapeCssString(value: string): string {
 
 function cssUrl(value: string): string {
     return `url("${escapeCssString(value)}")`;
-}
-
-function clampRows(value: number): number {
-    const rows = Number.isFinite(value) ? value : APP_CONFIG.GRID.DEFAULT_ROWS;
-    return Math.min(APP_CONFIG.GRID.MAX_ROWS, Math.max(1, rows));
 }
 
 function readAsDataUrl(file: Blob): Promise<string> {
@@ -365,6 +376,7 @@ function buildDashboardSection(draft: DashboardSettings): string {
       <div class="${styles.fieldGrid}">
         ${dropdownField("Default view", "dashboardView")}
         ${dropdownField("Grid rows", "gridRows")}
+        ${dropdownField("Grid columns", "gridColumns")}
         ${dropdownField("Item density", "cardDensity")}
         ${dropdownField("Clock format", "clockFormat")}
         ${dropdownField("Default search engine", "defaultSearchEngine")}
@@ -631,7 +643,8 @@ function applySettingsToForm(
     dropdowns: SettingsDropdowns,
 ): void {
     dropdowns.dashboardView?.setValue(settings.dashboardView);
-    dropdowns.gridRows?.setValue(String(clampRows(settings.gridRows)));
+    dropdowns.gridRows?.setValue(String(clampGridRows(settings.gridRows)));
+    dropdowns.gridColumns?.setValue(String(clampGridColumns(settings.gridColumns)));
     dropdowns.cardDensity?.setValue(settings.cardDensity);
     dropdowns.clockFormat?.setValue(settings.clockFormat);
     dropdowns.defaultSearchEngine?.setValue(settings.defaultSearchEngine);
@@ -719,8 +732,17 @@ function readSettingsFromForm(
         ),
         wallpaperId,
         wallpaperUrl,
-        gridRows: clampRows(
+        gridRows: clampGridRows(
             Number(getFormString(data, "gridRows", String(draft.gridRows))),
+        ),
+        gridColumns: clampGridColumns(
+            Number(
+                getFormString(
+                    data,
+                    "gridColumns",
+                    String(draft.gridColumns),
+                ),
+            ),
         ),
         showGreeting: getFormBoolean(data, "showGreeting"),
         showClock: getFormBoolean(data, "showClock"),
@@ -777,7 +799,16 @@ function mountSettingsDropdowns(
             "gridRows",
             "Grid rows",
             GRID_ROW_OPTIONS,
-            String(clampRows(settings.gridRows)),
+            String(clampGridRows(settings.gridRows)),
+            icons.grid,
+            signal,
+        ),
+        gridColumns: mountDropdown(
+            root,
+            "gridColumns",
+            "Grid columns",
+            GRID_COLUMN_OPTIONS,
+            String(clampGridColumns(settings.gridColumns)),
             icons.grid,
             signal,
         ),

@@ -41,6 +41,7 @@ export const APP_CONFIG = {
             showClock: true,
             showSearch: true,
             gridRows: 4,
+            gridColumns: 7,
             cardDensity: "compact" as const,
             defaultSearchEngine: "google" as SearchEngineId,
             userName: "",
@@ -91,9 +92,11 @@ export const APP_CONFIG = {
         },
     ] satisfies WallpaperConfig[],
     GRID: {
-        COLUMNS: 7,
         DEFAULT_ROWS: 4,
         MAX_ROWS: 5,
+        DEFAULT_COLUMNS: 7,
+        MIN_COLUMNS: 4,
+        MAX_COLUMNS: 8,
     },
     SEARCH: {
         DEBOUNCE_MS: 200,

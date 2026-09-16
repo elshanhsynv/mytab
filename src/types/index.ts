@@ -30,6 +30,7 @@ export interface DashboardSettings {
   showClock: boolean;
   showSearch: boolean;
   gridRows: number;
+  gridColumns: number;
   cardDensity: 'comfortable' | 'compact';
   defaultSearchEngine: SearchEngineId;
   userName: string;

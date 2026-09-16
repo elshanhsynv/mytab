@@ -5,9 +5,21 @@ export function getLegacyWallpaperUrl(value: unknown): string {
   return isRecord(value) && typeof value.wallpaperUrl === 'string' ? value.wallpaperUrl : '';
 }
 
+export function clampGridRows(value: unknown): number {
+  return clampGridDimension(value, APP_CONFIG.GRID.DEFAULT_ROWS, 1, APP_CONFIG.GRID.MAX_ROWS);
+}
+
+export function clampGridColumns(value: unknown): number {
+  return clampGridDimension(
+    value,
+    APP_CONFIG.GRID.DEFAULT_COLUMNS,
+    APP_CONFIG.GRID.MIN_COLUMNS,
+    APP_CONFIG.GRID.MAX_COLUMNS,
+  );
+}
+
 export function sanitizeSettings(value: unknown): DashboardSettings {
   const settings = isRecord(value) ? value : {};
-  const gridRows = typeof settings.gridRows === 'number' ? settings.gridRows : APP_CONFIG.GRID.DEFAULT_ROWS;
   const dashboardView = settings.dashboardView === 'sites'
     ? APP_CONFIG.DEFAULTS.settings.dashboardView
     : optionFrom(settings.dashboardView, ['favorites', 'bookmarks', 'folders'], APP_CONFIG.DEFAULTS.settings.dashboardView);
@@ -22,7 +34,8 @@ export function sanitizeSettings(value: unknown): DashboardSettings {
     showClock: typeof settings.showClock === 'boolean' ? settings.showClock : APP_CONFIG.DEFAULTS.settings.showClock,
     showSearch: typeof settings.showSearch === 'boolean' ? settings.showSearch : APP_CONFIG.DEFAULTS.settings.showSearch,
     userName: typeof settings.userName === 'string' ? settings.userName : APP_CONFIG.DEFAULTS.settings.userName,
-    gridRows: Math.min(APP_CONFIG.GRID.MAX_ROWS, Math.max(1, gridRows || APP_CONFIG.GRID.DEFAULT_ROWS)),
+    gridRows: clampGridRows(settings.gridRows),
+    gridColumns: clampGridColumns(settings.gridColumns),
     cardDensity: settings.cardDensity === 'compact' ? 'compact' : 'comfortable',
     defaultSearchEngine: optionFrom(
       settings.defaultSearchEngine,
@@ -51,6 +64,7 @@ export function getSettingsForStorage(settings: DashboardSettings): Omit<Dashboa
     showClock: settings.showClock,
     showSearch: settings.showSearch,
     gridRows: settings.gridRows,
+    gridColumns: settings.gridColumns,
     cardDensity: settings.cardDensity,
     defaultSearchEngine: settings.defaultSearchEngine,
     userName: settings.userName,
@@ -147,4 +161,16 @@ function sanitizeStoredItem(value: unknown): BookmarkItem | undefined {
 
 function optionFrom<T extends string>(value: unknown, options: readonly T[], fallback: T): T {
   return typeof value === 'string' && options.includes(value as T) ? (value as T) : fallback;
+}
+
+function clampGridDimension(
+  value: unknown,
+  fallback: number,
+  minimum: number,
+  maximum: number,
+): number {
+  const dimension = typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? Math.round(value)
+    : fallback;
+  return Math.min(maximum, Math.max(minimum, dimension));
 }
