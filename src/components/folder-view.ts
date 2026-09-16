@@ -2,8 +2,21 @@ import type { CardDensity } from "../dashboard/types";
 import type { Folder } from "../types";
 import { createBookmarkGrid } from "./bookmark-grid";
 import { createFolderCard } from "./folder-card";
+import { createPagination } from "./pagination";
 import { createSection } from "./section";
 import { ArrowLeft, createElement } from "lucide";
+import { getPageWindow } from "../utils/pagination";
+
+type FolderViewOptions = {
+    folders: Folder[];
+    activeFolderId: string;
+    density: CardDensity;
+    columns: number;
+    itemsPerPage: number;
+    currentPage: number;
+    onPageChange: (page: number) => void;
+    signal: AbortSignal;
+};
 
 const styles = {
     folderGrid:
@@ -19,25 +32,46 @@ const styles = {
 };
 
 export function renderFoldersView(
-    folders: Folder[],
-    activeFolderId: string,
-    density: CardDensity,
-    columns: number,
+    {
+        folders,
+        activeFolderId,
+        density,
+        columns,
+        itemsPerPage,
+        currentPage,
+        onPageChange,
+        signal,
+    }: FolderViewOptions,
 ): DocumentFragment {
     const fragment = document.createDocumentFragment();
     const activeFolder = folders.find((folder) => folder.id === activeFolderId);
 
     if (activeFolder) {
+        const page = getPageWindow(
+            activeFolder.items.length,
+            itemsPerPage,
+            currentPage,
+        );
         fragment.append(createFolderHeader(activeFolder.title));
+        const grid = createBookmarkGrid(
+            activeFolder.items.slice(page.start, page.end),
+            gridClass(density),
+            density,
+            columns,
+        );
+        const pagination = createPagination({
+            currentPage: page.currentPage,
+            pageCount: page.pageCount,
+            onPageChange,
+            signal,
+        });
+        const content = pagination ? document.createElement("div") : grid;
+
+        if (pagination) content.append(grid, pagination);
         fragment.append(
             createSection(
                 "",
-                createBookmarkGrid(
-                    activeFolder.items,
-                    gridClass(density),
-                    density,
-                    columns,
-                ),
+                content,
                 "No websites match your search.",
             ),
         );

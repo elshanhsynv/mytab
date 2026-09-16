@@ -1,7 +1,7 @@
 import type { AppState, BookmarkItem, Folder } from '../types';
 import { clampGridColumns, clampGridRows } from '../utils/dashboard-data';
 
-export function getGridItemCount(rows: number, columns: number): number {
+export function getGridPageSize(rows: number, columns: number): number {
   return clampGridRows(rows) * clampGridColumns(columns);
 }
 

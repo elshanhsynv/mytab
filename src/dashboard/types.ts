@@ -17,7 +17,7 @@ export type StartupData = {
 
 export type VisibleDashboardData = {
   settings: DashboardSettings;
-  itemCount: number;
+  itemsPerPage: number;
   favorites: BookmarkItem[];
   bookmarks: BookmarkItem[];
   folders: Folder[];
