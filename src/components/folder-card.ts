@@ -6,6 +6,9 @@ const styles = {
     'folder-card group relative flex aspect-square w-full flex-col items-center justify-center gap-4 rounded-2xl bg-white/10 p-4 text-center text-white backdrop-blur-xl ring-1 ring-white/10 transition duration-200 hover:-translate-y-1 hover:border-white/25 hover:bg-white/15',
   icon: 'size-11 text-violet-300 transition group-hover:scale-105 [&_svg]:size-full',
   name: 'max-w-full truncate text-sm font-medium text-white/80',
+  newFolder:
+    'group relative flex aspect-square w-full flex-col items-center justify-center gap-4 rounded-2xl border border-dashed border-white/20 bg-white/5 p-4 text-center text-white backdrop-blur-xl transition duration-200 hover:-translate-y-1 hover:border-white/35 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-violet-300',
+  newFolderIcon: 'size-11 text-white/60 transition group-hover:scale-105 group-hover:text-white/85 [&_svg]:size-full',
   count:
     'absolute right-3 top-3 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-violet-400/15 px-2 text-xs font-semibold text-violet-200',
 };
@@ -34,4 +37,23 @@ function escapeText(value: string): string {
   const span = document.createElement('span');
   span.textContent = value;
   return span.innerHTML;
+}
+
+/** A dashed "+" card after the folders, for creating a bookmark folder. */
+export function createNewFolderCard(): HTMLElement {
+  const card = document.createElement('button');
+  card.className = styles.newFolder;
+  card.type = 'button';
+  card.dataset.action = 'new-folder';
+
+  const icon = document.createElement('span');
+  icon.className = styles.newFolderIcon;
+  icon.innerHTML = icons.plus;
+
+  const name = document.createElement('span');
+  name.className = styles.name;
+  name.textContent = 'New folder';
+
+  card.append(icon, name);
+  return card;
 }

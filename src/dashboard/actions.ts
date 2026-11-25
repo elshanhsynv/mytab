@@ -6,7 +6,7 @@ import {
   type FavoriteFormValues,
 } from "../components/favorite-modal";
 import { bookmarkService } from "../services/bookmarks";
-import type { AppState, BookmarkItem, DashboardSettings } from "../types";
+import type { AppState, BookmarkItem, DashboardSettings, Folder } from "../types";
 import {
   createFavoriteId,
   getExportableSettings,
@@ -236,13 +236,118 @@ async function editDashboardItem(bookmark: BookmarkItem): Promise<void> {
   showFavoriteModal({
     favorite: bookmark,
     kind: "bookmark",
+    folders: state.get("folders").map(({ id, title }) => ({ id, title })),
     // Errors are shown inside the form, which stays open so the user can retry.
-    onSave: async (values) => {
-      const updated = await bookmarkService.updateBookmark(bookmark, values);
+    onSave: async ({ title, url, folderId }) => {
+      const updated = await bookmarkService.updateBookmark(bookmark, {
+        title,
+        url,
+      });
       replaceBookmark(updated);
+
+      if (folderId && folderId !== bookmark.folderId) {
+        const index = await bookmarkService.moveBookmarkToFolder(
+          bookmark.id,
+          folderId,
+        );
+        moveBookmarkLocally(updated, folderId, index);
+        showToast("Bookmark moved");
+        return;
+      }
+
       showToast("Bookmark updated");
     },
   });
+}
+
+/** Creates a browser bookmark at the end of a folder. */
+export async function addBookmarkToFolder(
+  folderId: string,
+  { title, url }: FavoriteFormValues,
+): Promise<void> {
+  const folder = state.get("folders").find((item) => item.id === folderId);
+  if (!folder) throw new Error("The folder no longer exists.");
+
+  const id = await bookmarkService.createBookmark({ folderId, title, url });
+  insertBookmark({
+    id,
+    title,
+    url,
+    source: "bookmark",
+    folderId,
+    folderTitle: folder.title,
+    dateAdded: Date.now(),
+    order: nextOrder(folder),
+  });
+  showToast("Bookmark added");
+}
+
+/** Creates an empty bookmark folder and opens it, ready for bookmarks. */
+export async function createBookmarkFolder(title: string): Promise<void> {
+  const id = await bookmarkService.createFolder(title);
+  const folders = state.get("folders");
+
+  // The live bookmark sync may have added it already.
+  if (!folders.some((folder) => folder.id === id)) {
+    state.set("folders", [
+      ...folders,
+      { id, title, items: [], order: folders.length },
+    ]);
+  }
+  state.set("activeFolderId", id);
+  showToast("Folder created");
+}
+
+/**
+ * Moves a bookmark to the end of another folder in local state, closing the
+ * gap it leaves the way Chrome does. `index` is its new position when the
+ * browser reported one.
+ */
+function moveBookmarkLocally(
+  item: BookmarkItem,
+  folderId: string,
+  index: number | undefined,
+): void {
+  const target = state.get("folders").find((folder) => folder.id === folderId);
+  if (!target) return;
+
+  const closeGap = (other: BookmarkItem): BookmarkItem =>
+    other.folderId === item.folderId &&
+    other.order !== undefined &&
+    item.order !== undefined &&
+    other.order > item.order
+      ? { ...other, order: other.order - 1 }
+      : other;
+
+  state.set(
+    "bookmarks",
+    state
+      .get("bookmarks")
+      .filter((other) => other.id !== item.id)
+      .map(closeGap),
+  );
+  state.set(
+    "folders",
+    state.get("folders").map((folder) => ({
+      ...folder,
+      items: folder.items.filter((other) => other.id !== item.id).map(closeGap),
+    })),
+  );
+
+  insertBookmark({
+    ...item,
+    folderId,
+    folderTitle: target.title,
+    order: index ?? nextOrder(target),
+  });
+}
+
+/** The position after the last bookmark in a folder. */
+function nextOrder(folder: Folder): number {
+  return folder.items.reduce(
+    (next, item) => Math.max(next, (item.order ?? -1) + 1),
+    0,
+  );
 }
 
 /**

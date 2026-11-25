@@ -15,7 +15,9 @@ export function getDashboardFolders(current: Readonly<AppState>, visibleBookmark
       ...folder,
       items: withPinnedFlags(folder.items.filter((item) => visibleBookmarkIds.has(item.id)), current.pinnedIds),
     }))
-    .filter((folder) => folder.items.length > 0);
+    // Empty folders stay visible so bookmarks can be added to them, but are
+    // hidden while searching, where they can't match.
+    .filter((folder) => folder.items.length > 0 || !current.searchQuery.trim());
 }
 
 export function sortLauncherItems(bookmarks: BookmarkItem[], pinnedIds: string[]): BookmarkItem[] {
