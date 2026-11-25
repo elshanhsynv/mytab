@@ -52,6 +52,19 @@ async function removeBookmark(id: string): Promise<void> {
   }
 }
 
+/**
+ * Moves a bookmark to `index` inside `parentId`. `index` is the position the
+ * bookmark should end up at once the move is done.
+ */
+async function moveBookmark(id: string, parentId: string, fromIndex: number, toIndex: number): Promise<void> {
+  if (!isExtension || !chrome?.bookmarks) return;
+
+  // Chrome reads the index against the list *before* the bookmark is taken
+  // out, so moving it later in the same folder needs one extra slot.
+  const index = toIndex > fromIndex ? toIndex + 1 : toIndex;
+  await chrome.bookmarks.move(id, { parentId, index });
+}
+
 function walk(nodes: BookmarkTreeNode[], folders: Folder[], looseBookmarks: BookmarkItem[], parentFolder?: Folder): void {
   for (const node of nodes) {
     if (node.url) {
@@ -104,4 +117,4 @@ function cloneMockData(): { bookmarks: BookmarkItem[]; folders: Folder[] } {
   };
 }
 
-export const bookmarkService = { getDashboardBookmarks, search, updateBookmark, removeBookmark };
+export const bookmarkService = { getDashboardBookmarks, search, updateBookmark, removeBookmark, moveBookmark };

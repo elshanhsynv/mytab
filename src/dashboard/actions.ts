@@ -118,20 +118,7 @@ export function reorderBookmarks(sourceId: string, targetId: string): void {
     return;
   }
 
-  const bookmarks = [...state.get("bookmarks")];
-  const from = bookmarks.findIndex((bookmark) => bookmark.id === sourceId);
-  const to = bookmarks.findIndex((bookmark) => bookmark.id === targetId);
-  if (from < 0 || to < 0) return;
-
-  const [moved] = bookmarks.splice(from, 1);
-  if (!moved) return;
-
-  bookmarks.splice(to, 0, moved);
-  state.set(
-    "bookmarks",
-    bookmarks.map((bookmark, order) => ({ ...bookmark, order })),
-  );
-  reorderBookmarkInsideFolder(sourceId, targetId);
+  void reorderBrowserBookmark(sourceId, targetId);
 }
 
 export function exportSettings(): void {
@@ -317,34 +304,68 @@ function reorderFavorites(sourceId: string, targetId: string): void {
   );
 }
 
-function reorderBookmarkInsideFolder(sourceId: string, targetId: string): void {
-  const folders = state.get("folders");
-  const folderIndex = folders.findIndex(
-    (folder) =>
-      folder.items.some((item) => item.id === sourceId) &&
-      folder.items.some((item) => item.id === targetId),
+/**
+ * Moves a browser bookmark onto the target's position and saves it to
+ * Chrome. `order` holds the bookmark's index in its Chrome folder, so the
+ * local state is updated the same way Chrome will update it, which keeps the
+ * dashboard identical after a reload. If saving fails, the move is undone.
+ */
+async function reorderBrowserBookmark(
+  sourceId: string,
+  targetId: string,
+): Promise<void> {
+  const previousBookmarks = state.get("bookmarks");
+  const previousFolders = state.get("folders");
+  const source = previousBookmarks.find((bookmark) => bookmark.id === sourceId);
+  const target = previousBookmarks.find((bookmark) => bookmark.id === targetId);
+  if (!source || !target) return;
+
+  const parentId = source.folderId;
+  if (!parentId || parentId !== target.folderId) {
+    showToast("Bookmarks can only be reordered within their folder");
+    return;
+  }
+
+  const from = source.order;
+  const to = target.order;
+  if (from === undefined || to === undefined || from === to) return;
+
+  const move = (item: BookmarkItem): BookmarkItem =>
+    item.folderId === parentId && item.order !== undefined
+      ? { ...item, order: indexAfterMove(item.order, from, to) }
+      : item;
+
+  state.set("bookmarks", previousBookmarks.map(move));
+  state.set(
+    "folders",
+    previousFolders.map((folder) =>
+      folder.id === parentId
+        ? {
+            ...folder,
+            items: folder.items
+              .map(move)
+              .sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
+          }
+        : folder,
+    ),
   );
-  if (folderIndex < 0) return;
 
-  const nextFolders = folders.map((folder, index) => {
-    if (index !== folderIndex) return folder;
+  try {
+    await bookmarkService.moveBookmark(sourceId, parentId, from, to);
+  } catch (error) {
+    console.error("Failed to save bookmark order.", error);
+    state.set("bookmarks", previousBookmarks);
+    state.set("folders", previousFolders);
+    showToast("Couldn't save bookmark order");
+  }
+}
 
-    const items = [...folder.items];
-    const from = items.findIndex((item) => item.id === sourceId);
-    const to = items.findIndex((item) => item.id === targetId);
-    if (from < 0 || to < 0) return folder;
-
-    const [moved] = items.splice(from, 1);
-    if (!moved) return folder;
-
-    items.splice(to, 0, moved);
-    return {
-      ...folder,
-      items: items.map((item, order) => ({ ...item, order })),
-    };
-  });
-
-  state.set("folders", nextFolders);
+/** Where an item at `index` ends up when the item at `from` moves to `to`. */
+function indexAfterMove(index: number, from: number, to: number): number {
+  if (index === from) return to;
+  if (from < to && index > from && index <= to) return index - 1;
+  if (from > to && index >= to && index < from) return index + 1;
+  return index;
 }
 
 function isFavoriteId(id: string): boolean {
