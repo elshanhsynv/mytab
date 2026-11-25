@@ -37,6 +37,9 @@ export async function handleContextAction(
       case "pin":
         togglePinned(bookmark.id);
         return;
+      case "add-to-favorites":
+        addBookmarkToFavorites(bookmark);
+        return;
       case "copy":
         await copyText(bookmark.url);
         showToast("URL copied");
@@ -88,6 +91,23 @@ export function addFavorite(values: FavoriteFormValues): void {
 
   state.set("favorites", [...state.get("favorites"), favorite]);
   showToast("Favorite added");
+}
+
+/** Copies a browser bookmark into favorites; the bookmark itself stays. */
+function addBookmarkToFavorites(bookmark: BookmarkItem): void {
+  const url = normalizeFavoriteUrl(bookmark.url);
+  if (!url) {
+    // Favorites only hold http(s) addresses, not chrome:// or javascript: ones.
+    showToast("Only web addresses can be favorites");
+    return;
+  }
+
+  if (state.get("favorites").some((favorite) => favorite.url === url)) {
+    showToast("Already in favorites");
+    return;
+  }
+
+  addFavorite({ title: bookmark.title, url });
 }
 
 export function updateFavorite(id: string, values: FavoriteFormValues): void {
