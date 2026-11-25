@@ -10,7 +10,7 @@ import { createPagination } from "../components/pagination";
 import { createSearchBar } from "../components/search-bar";
 import { createSection } from "../components/section";
 
-import { createSettingsButton } from "../components/settings-modal";
+import { createSettingsButton } from "../components/settings-button";
 import { createViewSwitch } from "../components/view-switch";
 import { state } from "../core/state";
 import { bookmarkService } from "../services/bookmarks";
