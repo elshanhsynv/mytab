@@ -36,7 +36,7 @@ export function sanitizeSettings(value: unknown): DashboardSettings {
     userName: typeof settings.userName === 'string' ? settings.userName : APP_CONFIG.DEFAULTS.settings.userName,
     gridRows: clampGridRows(settings.gridRows),
     gridColumns: clampGridColumns(settings.gridColumns),
-    cardDensity: settings.cardDensity === 'compact' ? 'compact' : 'comfortable',
+    cardDensity: optionFrom(settings.cardDensity, ['comfortable', 'compact'], APP_CONFIG.DEFAULTS.settings.cardDensity),
     defaultSearchEngine: optionFrom(
       settings.defaultSearchEngine,
       ['google', 'bing', 'duckduckgo', 'brave'],
