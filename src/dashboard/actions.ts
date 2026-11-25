@@ -286,6 +286,10 @@ function removeBookmark(id: string): void {
     "pinnedIds",
     state.get("pinnedIds").filter((pinnedId) => pinnedId !== id),
   );
+  state.set(
+    "recentlyVisited",
+    state.get("recentlyVisited").filter((item) => item.id !== id),
+  );
 }
 
 function reorderFavorites(sourceId: string, targetId: string): void {
