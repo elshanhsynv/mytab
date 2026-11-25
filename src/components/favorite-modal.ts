@@ -9,8 +9,13 @@ export type FavoriteFormValues = {
   url: string;
 };
 
+/** What the form edits; used in its wording. */
+export type FavoriteModalKind = "favorite" | "bookmark";
+
 export type FavoriteModalOptions = {
   favorite?: BookmarkItem;
+  /** Defaults to "favorite". */
+  kind?: FavoriteModalKind;
   onSave: (favorite: FavoriteFormValues) => MaybePromise<void>;
 };
 
@@ -69,10 +74,11 @@ export function showFavoriteModal(options: FavoriteModalOptions): void {
   form.tabIndex = -1;
 
   const isEditing = Boolean(options.favorite);
+  const kind = options.kind ?? "favorite";
   form.append(
-    createHeader(isEditing),
+    createHeader(isEditing, kind),
     createBody(options.favorite),
-    createFooter(isEditing ? "Save favorite" : "Add favorite"),
+    createFooter(isEditing ? `Save ${kind}` : `Add ${kind}`),
   );
 
   overlay.append(form);
@@ -173,7 +179,11 @@ export function showFavoriteModal(options: FavoriteModalOptions): void {
       event.preventDefault();
       if (saving) return;
 
-      const result = validateFavorite(readFavoriteForm(form));
+      const result = validateFavorite(
+        readFavoriteForm(form),
+        kind,
+        options.favorite?.url,
+      );
 
       if (!result.ok) {
         if (errorEl) errorEl.textContent = result.message;
@@ -191,9 +201,9 @@ export function showFavoriteModal(options: FavoriteModalOptions): void {
         .catch((saveError: unknown) => {
           if (controller.signal.aborted) return;
           if (errorEl) {
-            errorEl.textContent = "Could not save favorite. Please try again.";
+            errorEl.textContent = `Could not save ${kind}. Please try again.`;
           }
-          console.error("Save favorite failed.", saveError);
+          console.error(`Save ${kind} failed.`, saveError);
         })
         .finally(() => {
           if (controller.signal.aborted) return;
@@ -228,7 +238,7 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
   );
 }
 
-function createHeader(isEditing: boolean): HTMLElement {
+function createHeader(isEditing: boolean, kind: FavoriteModalKind): HTMLElement {
   const header = document.createElement("header");
   header.className = styles.header;
 
@@ -237,17 +247,20 @@ function createHeader(isEditing: boolean): HTMLElement {
   const heading = document.createElement("h2");
   heading.id = "favorite-modal-title";
   heading.className = styles.title;
-  heading.textContent = isEditing ? "Edit favorite" : "Add favorite";
+  heading.textContent = isEditing ? `Edit ${kind}` : `Add ${kind}`;
 
   const subtitle = document.createElement("p");
   subtitle.className = styles.subtitle;
-  subtitle.textContent = "Save a title and URL to your personal launcher.";
+  subtitle.textContent =
+    kind === "bookmark"
+      ? "Changes are saved to your browser bookmarks."
+      : "Save a title and URL to your personal launcher.";
 
   const closeButton = document.createElement("button");
   closeButton.className = styles.close;
   closeButton.type = "button";
   closeButton.dataset.close = "true";
-  closeButton.setAttribute("aria-label", "Close favorite form");
+  closeButton.setAttribute("aria-label", `Close ${kind} form`);
   closeButton.innerHTML = icons.x;
 
   copy.append(heading, subtitle);
@@ -342,7 +355,11 @@ function getFormString(data: FormData, key: keyof FavoriteFormValues): string {
   return typeof value === "string" ? value : "";
 }
 
-function validateFavorite(values: FavoriteFormValues): ValidationResult {
+function validateFavorite(
+  values: FavoriteFormValues,
+  kind: FavoriteModalKind,
+  originalUrl?: string,
+): ValidationResult {
   const title = values.title.trim();
   const rawUrl = values.url.trim();
 
@@ -350,11 +367,17 @@ function validateFavorite(values: FavoriteFormValues): ValidationResult {
     return {
       ok: false,
       field: "title",
-      message: "Add a title for this favorite.",
+      message: `Add a title for this ${kind}.`,
     };
   }
   if (!rawUrl) {
-    return { ok: false, field: "url", message: "Add a URL for this favorite." };
+    return { ok: false, field: "url", message: `Add a URL for this ${kind}.` };
+  }
+
+  // Browser bookmarks can hold chrome://, file:// or javascript: URLs. Keep
+  // an unchanged URL as it is, so renaming such a bookmark still works.
+  if (originalUrl !== undefined && rawUrl === originalUrl) {
+    return { ok: true, values: { title, url: rawUrl } };
   }
 
   const hasScheme = /^[a-z][a-z\d+.-]*:/i.test(rawUrl);
