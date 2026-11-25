@@ -104,6 +104,23 @@ async function removeBookmark(id: string): Promise<void> {
 }
 
 /**
+ * Creates `bookmark` again in its folder at its `order`, e.g. to undo a
+ * removal. Returns the ID Chrome gives it; outside the extension the old ID
+ * is kept.
+ */
+async function createBookmark(bookmark: BookmarkItem): Promise<string> {
+  if (!isExtension || !chrome?.bookmarks) return bookmark.id;
+
+  const node = await chrome.bookmarks.create({
+    parentId: bookmark.folderId,
+    index: bookmark.order,
+    title: bookmark.title,
+    url: bookmark.url,
+  });
+  return node.id;
+}
+
+/**
  * Moves a bookmark to `index` inside `parentId`. `index` is the position the
  * bookmark should end up at once the move is done.
  */
@@ -175,5 +192,6 @@ export const bookmarkService = {
   search,
   updateBookmark,
   removeBookmark,
+  createBookmark,
   moveBookmark,
 };

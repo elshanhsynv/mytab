@@ -225,16 +225,126 @@ async function editDashboardItem(bookmark: BookmarkItem): Promise<void> {
   });
 }
 
+/**
+ * Deletes right away and offers Undo in a toast, instead of asking first.
+ */
 async function deleteDashboardItem(bookmark: BookmarkItem): Promise<void> {
-  if (!window.confirm(`Remove "${bookmark.title}"?`)) return;
+  const wasPinned = state.get("pinnedIds").includes(bookmark.id);
+  const recentIndex = state
+    .get("recentlyVisited")
+    .findIndex((item) => item.id === bookmark.id);
 
   if (bookmark.source === "favorite") {
+    const index = state
+      .get("favorites")
+      .findIndex((favorite) => favorite.id === bookmark.id);
+    const favorite = state.get("favorites")[index];
+    if (!favorite) return;
+
     removeFavorite(bookmark.id);
+    showToast("Favorite removed", {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          state.set("favorites", insertAt(state.get("favorites"), index, favorite));
+          restoreExtras(favorite, wasPinned, recentIndex);
+          showToast("Favorite restored");
+        },
+      },
+    });
     return;
   }
 
+  const original = state.get("bookmarks").find((item) => item.id === bookmark.id);
+  if (!original) return;
+
   await bookmarkService.removeBookmark(bookmark.id);
   removeBookmark(bookmark.id);
+  showToast("Bookmark removed", {
+    action: {
+      label: "Undo",
+      onClick: () => void restoreBookmark(original, wasPinned, recentIndex),
+    },
+  });
+}
+
+/**
+ * Chrome can't undo a removal, so the bookmark is created again in the same
+ * folder and position. It gets a new ID, so its pin and recent visit move
+ * over to that ID.
+ */
+async function restoreBookmark(
+  original: BookmarkItem,
+  wasPinned: boolean,
+  recentIndex: number,
+): Promise<void> {
+  try {
+    const id = await bookmarkService.createBookmark(original);
+    const restored = { ...original, id };
+    insertBookmark(restored);
+    restoreExtras(restored, wasPinned, recentIndex);
+    showToast("Bookmark restored");
+  } catch (error) {
+    console.error("Failed to restore bookmark.", error);
+    showToast("Couldn't restore bookmark");
+  }
+}
+
+/** Puts a restored item's pin and recent visit back. */
+function restoreExtras(
+  item: BookmarkItem,
+  wasPinned: boolean,
+  recentIndex: number,
+): void {
+  if (wasPinned && !state.get("pinnedIds").includes(item.id)) {
+    state.set("pinnedIds", [...state.get("pinnedIds"), item.id]);
+  }
+
+  const recent = state.get("recentlyVisited");
+  if (recentIndex >= 0 && !recent.some((entry) => entry.id === item.id)) {
+    state.set(
+      "recentlyVisited",
+      insertAt(recent, recentIndex, { ...item, pinned: undefined }).slice(
+        0,
+        APP_CONFIG.RECENT.MAX_ITEMS,
+      ),
+    );
+  }
+}
+
+/**
+ * Adds a bookmark back to its folder at its `order`, moving later siblings
+ * down one place, the same way Chrome does when it is created there.
+ */
+function insertBookmark(item: BookmarkItem): void {
+  const position = item.order ?? 0;
+  const shift = (other: BookmarkItem): BookmarkItem =>
+    other.folderId === item.folderId &&
+    other.order !== undefined &&
+    other.order >= position
+      ? { ...other, order: other.order + 1 }
+      : other;
+
+  state.set("bookmarks", [...state.get("bookmarks").map(shift), item]);
+  state.set(
+    "folders",
+    state.get("folders").map((folder) =>
+      folder.id === item.folderId
+        ? {
+            ...folder,
+            items: [...folder.items.map(shift), item].sort(
+              (a, b) => (a.order ?? 0) - (b.order ?? 0),
+            ),
+          }
+        : folder,
+    ),
+  );
+}
+
+function insertAt<T>(items: readonly T[], index: number, item: T): T[] {
+  const next = [...items];
+  next.splice(Math.min(Math.max(index, 0), next.length), 0, item);
+  return next;
 }
 
 function replaceBookmark(updated: BookmarkItem): void {
