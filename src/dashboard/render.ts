@@ -36,16 +36,45 @@ const dashboardPages: Record<PaginatedView, number> = {
 let paginationQuery = "";
 const folderPages = new Map<string, number>();
 let sectionsController: AbortController | undefined;
+let shellController: AbortController | undefined;
+let pendingSectionsFrame = 0;
+// Which screen the last sections render showed. The card entrance animation
+// only plays when this changes (or the page changes), not when a search or
+// pin just reshuffles the tiles on the same screen.
+let lastSectionsScreen = "";
+let animateNextSections = false;
 
 export function renderDashboard(appRoot: HTMLElement): void {
     const settings = state.get("settings");
     document.body.className =
         "min-h-screen overflow-x-hidden bg-slate-950 bg-cover bg-center bg-fixed font-sans antialiased";
-    appRoot.replaceChildren(createDashboardShell(settings));
+
+    // Stops the old clock timer and search bar listeners before replacing them.
+    shellController?.abort();
+    const controller = new AbortController();
+    shellController = controller;
+
+    appRoot.replaceChildren(createDashboardShell(settings, controller.signal));
     renderSections(appRoot);
 }
 
+/** Renders the sections on the next frame, coalescing repeated requests. */
+export function scheduleSectionsRender(appRoot: HTMLElement): void {
+    if (pendingSectionsFrame) return;
+
+    pendingSectionsFrame = window.requestAnimationFrame(() => {
+        pendingSectionsFrame = 0;
+        renderSections(appRoot);
+    });
+}
+
 export function renderSections(appRoot: HTMLElement): void {
+    // A render now already reflects the latest state, so drop any queued one.
+    if (pendingSectionsFrame) {
+        window.cancelAnimationFrame(pendingSectionsFrame);
+        pendingSectionsFrame = 0;
+    }
+
     sectionsController?.abort();
     sectionsController = undefined;
 
@@ -59,6 +88,10 @@ export function renderSections(appRoot: HTMLElement): void {
     const current = state.getState();
     resetPaginationForQuery(current.searchQuery);
     const visibleData = getVisibleDashboardData(current);
+    const screen = `${visibleData.settings.dashboardView}:${current.activeFolderId}`;
+    const animate = animateNextSections || screen !== lastSectionsScreen;
+    lastSectionsScreen = screen;
+    animateNextSections = false;
     const fragment = document.createDocumentFragment();
     fragment.append(createViewSwitch(visibleData.settings.dashboardView));
 
@@ -74,6 +107,7 @@ export function renderSections(appRoot: HTMLElement): void {
                     currentPage: folderPages.get(current.activeFolderId) ?? 0,
                     onPageChange: (selectedPage) => {
                         folderPages.set(current.activeFolderId, selectedPage);
+                        animateNextSections = true;
                         renderSections(appRoot);
                     },
                     signal: controller.signal,
@@ -99,6 +133,7 @@ export function renderSections(appRoot: HTMLElement): void {
         );
     }
 
+    content.classList.toggle("dashboard-content--settled", !animate);
     content.replaceChildren(fragment);
 }
 
@@ -111,6 +146,7 @@ export function applyAppearance(settings: DashboardSettings): void {
 
 function createDashboardShell(
     settings: DashboardSettings,
+    signal: AbortSignal,
 ): HTMLElement {
     const dashboard = document.createElement("main");
     dashboard.className = styles.dashboard;
@@ -134,10 +170,10 @@ function createDashboardShell(
     hero.className = styles.hero;
     hero.dataset.dashboardHero = "true";
 
-    hero.append(createClock(settings));
+    hero.append(createClock(settings, signal));
 
     if (settings.showSearch) {
-        hero.append(createSearchBar());
+        hero.append(createSearchBar(signal));
     }
 
     const content = document.createElement("div");
@@ -153,15 +189,27 @@ function getVisibleDashboardData(
     current: Readonly<AppState>,
 ): VisibleDashboardData {
     const settings = current.settings;
-    const favorites = bookmarkService.search(
-        withPinnedFlags(current.favorites, current.pinnedIds),
-        current.searchQuery,
-    );
-    const bookmarks = bookmarkService.search(
-        withPinnedFlags(current.bookmarks, current.pinnedIds),
-        current.searchQuery,
-    );
-    const visibleBookmarkIds = new Set(bookmarks.map((item) => item.id));
+    const view = settings.dashboardView;
+    // Only filter the list the current view shows, and filter before copying
+    // items to add pin flags so a search touches as few items as possible.
+    const visible = (items: AppState["bookmarks"]) =>
+        withPinnedFlags(
+            bookmarkService.search(items, current.searchQuery),
+            current.pinnedIds,
+        );
+    const favorites = view === "favorites" ? visible(current.favorites) : [];
+    const bookmarks = view === "bookmarks" ? visible(current.bookmarks) : [];
+    const folders =
+        view === "folders"
+            ? getDashboardFolders(
+                  current,
+                  new Set(
+                      bookmarkService
+                          .search(current.bookmarks, current.searchQuery)
+                          .map((item) => item.id),
+                  ),
+              )
+            : [];
 
     return {
         settings,
@@ -171,7 +219,7 @@ function getVisibleDashboardData(
         ),
         favorites,
         bookmarks,
-        folders: getDashboardFolders(current, visibleBookmarkIds),
+        folders,
     };
 }
 
@@ -210,6 +258,7 @@ function renderFavoritesView(
         "No favorites match your search.",
         (selectedPage) => {
             dashboardPages.favorites = selectedPage;
+            animateNextSections = true;
             renderSections(appRoot);
         },
         signal,
@@ -240,6 +289,7 @@ function renderBookmarksView(
         "No bookmarks match your search.",
         (selectedPage) => {
             dashboardPages.bookmarks = selectedPage;
+            animateNextSections = true;
             renderSections(appRoot);
         },
         signal,

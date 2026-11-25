@@ -12,8 +12,10 @@ import {
     type Dropdown,
 } from "./dropdown";
 import { icons } from "./icons";
+import { debounce } from "../utils/debounce";
 
 const SEARCH_PLACEHOLDER = "Search the web or enter a URL";
+const DASHBOARD_FILTER_DELAY_MS = 80;
 
 const styles = {
     wrapper:
@@ -34,7 +36,7 @@ const styles = {
 
 let searchBarId = 0;
 
-export function createSearchBar(): HTMLElement {
+export function createSearchBar(signal: AbortSignal): HTMLElement {
     const inputId = `search-input-${++searchBarId}`;
     const wrapper = document.createElement("div");
 
@@ -98,16 +100,20 @@ export function createSearchBar(): HTMLElement {
         clearButton.classList.toggle("hidden", searchInput.value.length === 0);
     };
 
-    // What's typed here also filters the tiles on the dashboard.
-    const syncDashboardQuery = (): void => {
+    // What's typed here also filters the tiles on the dashboard. Filtering
+    // waits for a short pause in typing so fast typists don't rebuild the grid
+    // on every key.
+    const syncDashboardQuery = debounce((): void => {
         if (state.get("searchQuery") !== searchInput.value) {
             state.set("searchQuery", searchInput.value);
         }
-    };
+    }, DASHBOARD_FILTER_DELAY_MS);
 
     const onInput = (): void => {
         updateClearButton();
         syncDashboardQuery();
+        // Clearing the box restores the tiles right away.
+        if (!searchInput.value) syncDashboardQuery.flush();
     };
 
     const selectEngine = (engineId: SearchEngineId): void => {
@@ -160,6 +166,7 @@ export function createSearchBar(): HTMLElement {
         renderer.clear();
         updateClearButton();
         syncDashboardQuery();
+        syncDashboardQuery.flush();
         searchInput.focus();
     }
 
@@ -190,25 +197,24 @@ export function createSearchBar(): HTMLElement {
     clearButton.addEventListener("click", onClear);
     document.addEventListener("keydown", onDocumentKeyDown);
 
-    const observer = new MutationObserver(() => {
-        if (document.contains(wrapper)) {
-            return;
-        }
-
-        searchInput.removeEventListener("input", onInput);
-        searchInput.removeEventListener("keydown", onInputKeyDown);
-        clearButton.removeEventListener("click", onClear);
-        document.removeEventListener("keydown", onDocumentKeyDown);
-        unsubscribeSettings();
-        // Any replacement search bar starts empty, so drop the old filter too.
-        state.set("searchQuery", "");
-        engineDropdown?.destroy();
-        controller.destroy();
-        renderer.destroy();
-        observer.disconnect();
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
+    // Torn down together with the dashboard shell that owns this search bar.
+    signal.addEventListener(
+        "abort",
+        () => {
+            searchInput.removeEventListener("input", onInput);
+            searchInput.removeEventListener("keydown", onInputKeyDown);
+            clearButton.removeEventListener("click", onClear);
+            document.removeEventListener("keydown", onDocumentKeyDown);
+            unsubscribeSettings();
+            syncDashboardQuery.cancel();
+            // Any replacement search bar starts empty, so drop the old filter too.
+            state.set("searchQuery", "");
+            engineDropdown?.destroy();
+            controller.destroy();
+            renderer.destroy();
+        },
+        { once: true },
+    );
     updateClearButton();
 
     return wrapper;

@@ -13,7 +13,7 @@ export function getDashboardFolders(current: Readonly<AppState>, visibleBookmark
   return current.folders
     .map((folder) => ({
       ...folder,
-      items: withPinnedFlags(folder.items, current.pinnedIds).filter((item) => visibleBookmarkIds.has(item.id)),
+      items: withPinnedFlags(folder.items.filter((item) => visibleBookmarkIds.has(item.id)), current.pinnedIds),
     }))
     .filter((folder) => folder.items.length > 0);
 }
