@@ -98,6 +98,18 @@ export function createSearchBar(): HTMLElement {
         clearButton.classList.toggle("hidden", searchInput.value.length === 0);
     };
 
+    // What's typed here also filters the tiles on the dashboard.
+    const syncDashboardQuery = (): void => {
+        if (state.get("searchQuery") !== searchInput.value) {
+            state.set("searchQuery", searchInput.value);
+        }
+    };
+
+    const onInput = (): void => {
+        updateClearButton();
+        syncDashboardQuery();
+    };
+
     const selectEngine = (engineId: SearchEngineId): void => {
         currentEngineId = engineId;
         state.set("settings", {
@@ -139,20 +151,17 @@ export function createSearchBar(): HTMLElement {
             return;
         }
 
-        controller.cancel();
-        searchInput.value = "";
-        renderer.clear();
-        updateClearButton();
-        searchInput.focus();
+        onClear();
     };
 
-    const onClear = (): void => {
+    function onClear(): void {
         controller.cancel();
         searchInput.value = "";
         renderer.clear();
         updateClearButton();
+        syncDashboardQuery();
         searchInput.focus();
-    };
+    }
 
     const onDocumentKeyDown = (event: KeyboardEvent): void => {
         const target = event.target;
@@ -176,7 +185,7 @@ export function createSearchBar(): HTMLElement {
         searchInput.select();
     };
 
-    searchInput.addEventListener("input", updateClearButton);
+    searchInput.addEventListener("input", onInput);
     searchInput.addEventListener("keydown", onInputKeyDown);
     clearButton.addEventListener("click", onClear);
     document.addEventListener("keydown", onDocumentKeyDown);
@@ -186,11 +195,13 @@ export function createSearchBar(): HTMLElement {
             return;
         }
 
-        searchInput.removeEventListener("input", updateClearButton);
+        searchInput.removeEventListener("input", onInput);
         searchInput.removeEventListener("keydown", onInputKeyDown);
         clearButton.removeEventListener("click", onClear);
         document.removeEventListener("keydown", onDocumentKeyDown);
         unsubscribeSettings();
+        // Any replacement search bar starts empty, so drop the old filter too.
+        state.set("searchQuery", "");
         engineDropdown?.destroy();
         controller.destroy();
         renderer.destroy();
