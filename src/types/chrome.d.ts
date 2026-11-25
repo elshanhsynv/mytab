@@ -34,6 +34,7 @@ interface ChromeGlobal {
     getTree(): Promise<ChromeBookmarkNode[]>;
     update(id: string, changes: ChromeBookmarkChanges): Promise<ChromeBookmarkNode>;
     remove(id: string): Promise<void>;
+    create(bookmark: { parentId?: string; index?: number; title?: string; url?: string }): Promise<ChromeBookmarkNode>;
     move(id: string, destination: { parentId?: string; index?: number }): Promise<ChromeBookmarkNode>;
     onCreated: ChromeEvent;
     onRemoved: ChromeEvent;
