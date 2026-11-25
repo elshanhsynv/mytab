@@ -5,10 +5,17 @@ export type PaginationOptions = {
   signal: AbortSignal;
 };
 
+// Most dots shown at once. With more pages than this, the dots slide with the
+// current page and the outermost ones shrink to hint that more pages follow.
+const MAX_PAGINATION_DOTS = 7;
+
 const styles = {
-  navigation: 'flex justify-center gap-2 pt-4',
-  page: 'size-2.5 rounded-full bg-white/35 transition hover:bg-white/60 focus:outline-none focus:ring-2 focus:ring-white/70',
-  activePage: 'w-5 bg-white hover:bg-white',
+  navigation: 'flex items-center justify-center gap-2 pt-4',
+  page: 'shrink-0 rounded-full bg-white/35 transition hover:bg-white/60 focus:outline-none focus:ring-2 focus:ring-white/70',
+  // Exactly one size class per dot, so Tailwind's class order can't override it.
+  dot: 'size-2.5',
+  activePage: 'h-2.5 w-5 bg-white hover:bg-white',
+  morePages: 'size-1.5',
 };
 
 export function createPagination({
@@ -40,18 +47,38 @@ export function createPagination({
     { signal },
   );
 
-  for (let page = 0; page < pageCount; page += 1) {
+  const { first, last } = getDotWindow(currentPage, pageCount);
+
+  for (let page = first; page <= last; page += 1) {
     const button = document.createElement('button');
     const isActive = page === currentPage;
+    const hintsMore =
+      (page === first && first > 0) || (page === last && last < pageCount - 1);
     button.type = 'button';
-    button.className = `${styles.page} ${isActive ? styles.activePage : ''}`;
-    button.setAttribute('aria-label', `Page ${page + 1}`);
+    button.className = [
+      styles.page,
+      isActive ? styles.activePage : hintsMore ? styles.morePages : styles.dot,
+    ].join(' ');
+    button.setAttribute('aria-label', `Page ${page + 1} of ${pageCount}`);
     if (isActive) button.setAttribute('aria-current', 'page');
     button.addEventListener('click', () => onPageChange(page));
     navigation.append(button);
   }
 
   return navigation;
+}
+
+/** The range of pages that get a dot: at most MAX_PAGINATION_DOTS, centred on the current page where possible. */
+function getDotWindow(
+  currentPage: number,
+  pageCount: number,
+): { first: number; last: number } {
+  const count = Math.min(pageCount, MAX_PAGINATION_DOTS);
+  const first = Math.min(
+    Math.max(0, currentPage - Math.floor(count / 2)),
+    pageCount - count,
+  );
+  return { first, last: first + count - 1 };
 }
 
 function getTargetPage(
