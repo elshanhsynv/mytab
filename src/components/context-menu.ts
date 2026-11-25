@@ -80,6 +80,11 @@ export function showContextMenu(
     menu.style.left = `${Math.max(8, x)}px`;
     menu.style.top = `${Math.max(8, y)}px`;
 
+    // Closing the menu (any way, including opening another one) removes these.
+    const controller = new AbortController();
+    menuController = controller;
+    const { signal } = controller;
+
     const clickHandler = (event: MouseEvent) => {
         const target = (event.target as HTMLElement).closest<HTMLElement>(
             "[data-context-action]",
@@ -94,33 +99,33 @@ export function showContextMenu(
                 console.error("Context menu action failed.", error);
             });
             closeContextMenu();
-            document.removeEventListener("click", clickHandler);
-            document.removeEventListener("keydown", keyHandler);
             return;
         }
 
         if (!menu.contains(event.target as Node)) {
             closeContextMenu();
-            document.removeEventListener("click", clickHandler);
-            document.removeEventListener("keydown", keyHandler);
         }
     };
 
     const keyHandler = (event: KeyboardEvent) => {
         if (event.key === "Escape") {
             closeContextMenu();
-            document.removeEventListener("click", clickHandler);
-            document.removeEventListener("keydown", keyHandler);
         }
     };
 
+    // Wait a tick so the click that opened the menu doesn't close it. If the
+    // menu is closed before then, the aborted signal makes these no-ops.
     window.setTimeout(() => {
-        document.addEventListener("click", clickHandler);
-        document.addEventListener("keydown", keyHandler);
+        document.addEventListener("click", clickHandler, { signal });
+        document.addEventListener("keydown", keyHandler, { signal });
     }, 0);
 }
 
+let menuController: AbortController | undefined;
+
 export function closeContextMenu(): void {
+    menuController?.abort();
+    menuController = undefined;
     document.querySelector(".context-menu")?.remove();
 }
 

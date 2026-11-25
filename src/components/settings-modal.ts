@@ -116,11 +116,6 @@ const SECTIONS: readonly SectionMeta[] = [
 ];
 
 const styles = {
-    settingsButton:
-        "inline-flex size-10 items-center justify-center rounded-2xl [&_svg]:size-4",
-    settingsContainer:
-        "relative rounded-2xl bg-white/10 backdrop-blur-md transition hover:bg-white/15 hover:scale-105",
-
     overlay:
         "fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 transition-opacity sm:p-6",
     panel:
@@ -196,19 +191,6 @@ const styles = {
     primary:
         "inline-flex h-8 items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3.5 text-xs font-medium text-white transition-colors hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 [&_svg]:size-3.5",
 };
-
-export function createSettingsButton(): HTMLDivElement {
-    const container = document.createElement("div");
-    container.className = styles.settingsContainer;
-    const button = document.createElement("button");
-    button.className = styles.settingsButton;
-    button.type = "button";
-    button.dataset.action = "open-settings";
-    button.setAttribute("aria-label", "Open settings");
-    button.innerHTML = icons.settings;
-    container.appendChild(button);
-    return container;
-}
 
 function escapeHtml(value: string): string {
     return value

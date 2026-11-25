@@ -135,13 +135,17 @@
 
 .folder-card {
     transition-duration: 180ms;
-    transition-timing-function: var(--ease-mytab-soft);
+    transition-timing-function: var(--ease-soft);
 }
 
 @media (prefers-reduced-motion: reduce) {
+    .bookmark-card,
+    .add-favorite-card,
     .section-header,
     .folder-card,
     .empty-surface {
+        /* Cards start hidden and fade in via cardIn, so show them outright. */
+        opacity: 1;
         animation: none;
         transform: none;
     }

@@ -1,6 +1,5 @@
 import { showContextMenu } from "../components/context-menu";
 import { showFavoriteModal } from "../components/favorite-modal";
-import { showSettingsModal } from "../components/settings-modal";
 import { delegate } from "../core/events";
 import { state } from "../core/state";
 import {
@@ -12,6 +11,7 @@ import {
   importSettings,
   reorderBookmarks,
 } from "./actions";
+import { showToast } from "./toast";
 import type { DashboardView, DragState } from "./types";
 import { DASHBOARD_VIEWS } from "./types";
 
@@ -29,14 +29,55 @@ function bindModalEvents(appRoot: HTMLElement): void {
     });
   });
 
+  // Warm the settings chunk as soon as the user heads for the button.
+  for (const eventType of ["pointerover", "focusin"]) {
+    delegate(appRoot, '[data-action="open-settings"]', eventType, () => {
+      void loadSettingsModal().catch(() => undefined);
+    });
+  }
+
   delegate(appRoot, '[data-action="open-settings"]', "click", () => {
+    void openSettings();
+  });
+}
+
+type SettingsModalModule = typeof import("../components/settings-modal");
+
+let settingsModal: Promise<SettingsModalModule> | undefined;
+let openingSettings = false;
+
+// The settings modal is large and only needed once the user opens it, so it is
+// loaded on demand instead of with the dashboard.
+function loadSettingsModal(): Promise<SettingsModalModule> {
+  settingsModal ??= import("../components/settings-modal").catch(
+    (error: unknown) => {
+      // Let the next attempt try again instead of caching the failure.
+      settingsModal = undefined;
+      throw error;
+    },
+  );
+  return settingsModal;
+}
+
+async function openSettings(): Promise<void> {
+  // Ignore repeat clicks while the chunk is still loading.
+  if (openingSettings) return;
+  openingSettings = true;
+
+  try {
+    const { showSettingsModal } = await loadSettingsModal();
     showSettingsModal({
       settings: state.get("settings"),
       onSave: (settings) => state.set("settings", settings),
       onExport: exportSettings,
       onImport: importSettings,
     });
-  });
+  } catch (error) {
+    console.error("Failed to open settings.", error);
+    showToast("Couldn't open settings");
+  } finally {
+    openingSettings = false;
+  }
 }
 
 function bindNavigationEvents(appRoot: HTMLElement): void {
