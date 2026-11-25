@@ -213,16 +213,16 @@ async function editDashboardItem(bookmark: BookmarkItem): Promise<void> {
     return;
   }
 
-  const title = window.prompt("Bookmark title", bookmark.title);
-  if (title === null) return;
-  const url = window.prompt("Bookmark URL", bookmark.url);
-  if (url === null) return;
-
-  const updated = await bookmarkService.updateBookmark(bookmark, {
-    title,
-    url,
+  showFavoriteModal({
+    favorite: bookmark,
+    kind: "bookmark",
+    // Errors are shown inside the form, which stays open so the user can retry.
+    onSave: async (values) => {
+      const updated = await bookmarkService.updateBookmark(bookmark, values);
+      replaceBookmark(updated);
+      showToast("Bookmark updated");
+    },
   });
-  replaceBookmark(updated);
 }
 
 async function deleteDashboardItem(bookmark: BookmarkItem): Promise<void> {
