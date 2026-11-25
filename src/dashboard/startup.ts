@@ -14,6 +14,7 @@ import {
   sanitizeStoredItems,
 } from '../utils/dashboard-data';
 import { hydrateWallpaper } from './actions';
+import { syncBrowserBookmarks } from './bookmark-sync';
 import { bindDashboardEvents } from './events';
 import { applyPinsToFolders } from './items';
 import { applyAppearance, renderDashboard, scheduleSectionsRender as scheduleSections } from './render';
@@ -36,6 +37,7 @@ export async function initDashboard(appRoot: HTMLElement): Promise<void> {
   renderDashboard(appRoot);
   bindDashboardEvents(appRoot);
   void subscribeState(appRoot);
+  syncBrowserBookmarks();
   void hydrateWallpaper(startupData.settings, startupData.legacyWallpaperUrl).catch((error: unknown) => {
     console.error('Failed to hydrate wallpaper.', error);
   });

@@ -20,6 +20,11 @@ type ChromeStorageArea = {
   clear(): Promise<void>;
 };
 
+type ChromeEvent = {
+  addListener(callback: (...args: unknown[]) => void): void;
+  removeListener(callback: (...args: unknown[]) => void): void;
+};
+
 interface ChromeGlobal {
   runtime?: {
     id?: string;
@@ -30,6 +35,13 @@ interface ChromeGlobal {
     update(id: string, changes: ChromeBookmarkChanges): Promise<ChromeBookmarkNode>;
     remove(id: string): Promise<void>;
     move(id: string, destination: { parentId?: string; index?: number }): Promise<ChromeBookmarkNode>;
+    onCreated: ChromeEvent;
+    onRemoved: ChromeEvent;
+    onChanged: ChromeEvent;
+    onMoved: ChromeEvent;
+    onChildrenReordered: ChromeEvent;
+    onImportBegan: ChromeEvent;
+    onImportEnded: ChromeEvent;
   };
   storage?: {
     local: ChromeStorageArea;
