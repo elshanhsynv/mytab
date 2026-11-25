@@ -15,6 +15,7 @@ import {
     Plus,
     Search,
     Settings,
+    Star,
     Sun,
     Trash2,
     Upload,
@@ -68,6 +69,7 @@ export const icons = {
     edit: icon(Pencil),
     trash: icon(Trash2),
     copy: icon(Copy),
+    star: icon(Star),
     download: icon(Download),
     upload: icon(Upload),
 } as const;

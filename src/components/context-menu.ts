@@ -1,7 +1,7 @@
+import type { ContextAction } from "../dashboard/types";
 import type { BookmarkItem } from "../types";
 import { icons } from "./icons";
 
-type ContextAction = "open-new-tab" | "pin" | "edit" | "copy" | "delete";
 type MaybePromise<T> = T | Promise<T>;
 
 const styles = {
@@ -66,7 +66,8 @@ export function showContextMenu(
     const itemType = bookmark.source === "favorite" ? "favorite" : "bookmark";
     menu.innerHTML = `
     ${item("open-new-tab", icons.external, "Open in new tab")}
-    ${item("pin", icons.pin, bookmark.pinned ? "Unpin" : "Pin favorite")}
+    ${item("pin", icons.pin, bookmark.pinned ? "Unpin" : "Pin")}
+    ${itemType === "bookmark" ? item("add-to-favorites", icons.star, "Add to favorites") : ""}
     ${item("edit", icons.edit, `Edit ${itemType}`)}
     ${item("copy", icons.copy, "Copy URL")}
     <div class="${styles.separator}"></div>

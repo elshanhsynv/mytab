@@ -2,7 +2,7 @@ import type { BookmarkItem, DashboardSettings, Folder } from '../types';
 
 export type DashboardView = DashboardSettings['dashboardView'];
 export type CardDensity = DashboardSettings['cardDensity'];
-export type ContextAction = 'open-new-tab' | 'pin' | 'edit' | 'copy' | 'delete';
+export type ContextAction = 'open-new-tab' | 'pin' | 'add-to-favorites' | 'edit' | 'copy' | 'delete';
 export type Unsubscribe = () => void;
 
 export type StartupData = {
@@ -36,7 +36,7 @@ export type DragState = {
 };
 
 export const DASHBOARD_VIEWS: readonly DashboardView[] = ['favorites', 'bookmarks', 'folders'];
-export const CONTEXT_ACTIONS: readonly ContextAction[] = ['open-new-tab', 'pin', 'edit', 'copy', 'delete'];
+export const CONTEXT_ACTIONS: readonly ContextAction[] = ['open-new-tab', 'pin', 'add-to-favorites', 'edit', 'copy', 'delete'];
 
 export const VIEW_LABELS: Record<DashboardView, string> = {
   favorites: 'Favorites',
