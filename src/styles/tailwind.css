@@ -111,9 +111,16 @@
     animation-delay: calc(var(--item-index) * 24ms);
 }
 
-.bookmark-card,
-.add-favorite-card {
-    will-change: transform, opacity;
+/* Re-renders that only filter or reorder tiles on the same screen skip the
+   entrance animation, so tiles don't flash in again on every keystroke. */
+.dashboard-content--settled .bookmark-card,
+.dashboard-content--settled .add-favorite-card,
+.dashboard-content--settled .folder-card,
+.dashboard-content--settled .empty-surface,
+.dashboard-content--settled .section-header {
+    opacity: 1;
+    transform: none;
+    animation: none;
 }
 
 .section-header {

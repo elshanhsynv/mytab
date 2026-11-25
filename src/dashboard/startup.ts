@@ -16,7 +16,7 @@ import {
 import { hydrateWallpaper } from './actions';
 import { bindDashboardEvents } from './events';
 import { applyPinsToFolders } from './items';
-import { applyAppearance, renderDashboard, renderSections } from './render';
+import { applyAppearance, renderDashboard, scheduleSectionsRender as scheduleSections } from './render';
 import type { StartupData, Unsubscribe } from './types';
 
 export async function initDashboard(appRoot: HTMLElement): Promise<void> {
@@ -65,15 +65,7 @@ async function loadStartupData(): Promise<StartupData> {
 }
 
 function subscribeState(appRoot: HTMLElement): Unsubscribe {
-  let frameId = 0;
-  const scheduleSectionsRender = () => {
-    if (frameId) return;
-
-    frameId = window.requestAnimationFrame(() => {
-      frameId = 0;
-      renderSections(appRoot);
-    });
-  };
+  const scheduleSectionsRender = () => scheduleSections(appRoot);
 
   const subscriptions: Unsubscribe[] = [
     state.subscribe('bookmarks', scheduleSectionsRender),
@@ -91,8 +83,10 @@ function subscribeState(appRoot: HTMLElement): Unsubscribe {
     state.subscribe('settings', (settings, previousSettings) => {
       void persistSettings(settings, previousSettings);
       applyAppearance(settings);
-      if (settingsAffectDashboard(settings, previousSettings)) {
+      if (settingsAffectShell(settings, previousSettings)) {
         renderDashboard(appRoot);
+      } else if (settingsAffectSections(settings, previousSettings)) {
+        scheduleSectionsRender();
       }
     }),
     state.subscribe('recentlyVisited', (items) => {
@@ -103,24 +97,34 @@ function subscribeState(appRoot: HTMLElement): Unsubscribe {
   return () => subscriptions.forEach((unsubscribe) => unsubscribe());
 }
 
-function settingsAffectDashboard(
+// Settings shown in the header and hero (greeting, clock, search bar). Changing
+// one of these rebuilds the whole dashboard. The wallpaper is applied to the
+// page body separately, so it needs no rebuild at all.
+function settingsAffectShell(
   settings: DashboardSettings,
   previousSettings: DashboardSettings | undefined,
 ): boolean {
   if (!previousSettings) return true;
 
   return (
-    settings.dashboardView !== previousSettings.dashboardView ||
-    settings.wallpaperId !== previousSettings.wallpaperId ||
-    settings.wallpaperUrl !== previousSettings.wallpaperUrl ||
     settings.clockFormat !== previousSettings.clockFormat ||
     settings.showGreeting !== previousSettings.showGreeting ||
     settings.showClock !== previousSettings.showClock ||
     settings.showSearch !== previousSettings.showSearch ||
+    settings.userName !== previousSettings.userName
+  );
+}
+
+// Settings that only change the tiles below the search bar.
+function settingsAffectSections(
+  settings: DashboardSettings,
+  previousSettings: DashboardSettings,
+): boolean {
+  return (
+    settings.dashboardView !== previousSettings.dashboardView ||
     settings.gridRows !== previousSettings.gridRows ||
     settings.gridColumns !== previousSettings.gridColumns ||
-    settings.cardDensity !== previousSettings.cardDensity ||
-    settings.userName !== previousSettings.userName
+    settings.cardDensity !== previousSettings.cardDensity
   );
 }
 

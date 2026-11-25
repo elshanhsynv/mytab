@@ -14,7 +14,10 @@ const styles = {
         "mt-5 text-sm font-medium tracking-[0.01em] text-white/45 sm:mt-6 sm:text-base",
 };
 
-export function createClock(settings: DashboardSettings): HTMLElement {
+export function createClock(
+    settings: DashboardSettings,
+    signal: AbortSignal,
+): HTMLElement {
     const clock = document.createElement("section");
     clock.className = styles.wrapper;
     clock.setAttribute("aria-live", "polite");
@@ -73,13 +76,11 @@ export function createClock(settings: DashboardSettings): HTMLElement {
 
     render();
 
+    // The clock lives as long as the dashboard shell that owns it.
     const interval = window.setInterval(render, 30_000);
+    signal.addEventListener("abort", () => window.clearInterval(interval), {
+        once: true,
+    });
 
-    const instance = clock as HTMLElement & { destroy(): void };
-
-    instance.destroy = () => {
-        window.clearInterval(interval);
-    };
-
-    return instance;
+    return clock;
 }
