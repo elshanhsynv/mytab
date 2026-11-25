@@ -10,19 +10,70 @@ async function getDashboardBookmarks(): Promise<{ bookmarks: BookmarkItem[]; fol
   }
 
   try {
-    const tree = await chrome.bookmarks.getTree();
-    const folders: Folder[] = [];
-    const looseBookmarks: BookmarkItem[] = [];
-
-    for (const root of tree) {
-      walk(root.children ?? [], folders, looseBookmarks);
-    }
-
-    const bookmarks = [...looseBookmarks, ...folders.flatMap((folder) => folder.items)];
-    return { bookmarks, folders };
+    return await readBrowserBookmarks();
   } catch {
     return cloneMockData();
   }
+}
+
+/**
+ * Reads the browser's bookmark tree. Unlike getDashboardBookmarks it throws
+ * on failure instead of falling back to sample data, so a failed refresh
+ * never replaces real bookmarks.
+ */
+async function readBrowserBookmarks(): Promise<{ bookmarks: BookmarkItem[]; folders: Folder[] }> {
+  if (!isExtension || !chrome?.bookmarks) {
+    throw new Error('Browser bookmarks are not available.');
+  }
+
+  const tree = await chrome.bookmarks.getTree();
+  const folders: Folder[] = [];
+  const looseBookmarks: BookmarkItem[] = [];
+
+  for (const root of tree) {
+    walk(root.children ?? [], folders, looseBookmarks);
+  }
+
+  const bookmarks = [...looseBookmarks, ...folders.flatMap((folder) => folder.items)];
+  return { bookmarks, folders };
+}
+
+/**
+ * Calls `onChange` whenever the browser's bookmarks change, including changes
+ * made outside this page. A bookmark import fires many events, so those are
+ * held back and reported once when the import ends. Returns a function that
+ * stops listening. Does nothing outside the extension.
+ */
+function watchBookmarks(onChange: () => void): () => void {
+  const api = isExtension ? chrome?.bookmarks : undefined;
+  if (!api) return () => {};
+
+  let importing = false;
+  const handleChange = () => {
+    if (!importing) onChange();
+  };
+  const handleImportBegan = () => {
+    importing = true;
+  };
+  const handleImportEnded = () => {
+    importing = false;
+    onChange();
+  };
+
+  const listeners: [ChromeEvent, () => void][] = [
+    [api.onCreated, handleChange],
+    [api.onRemoved, handleChange],
+    [api.onChanged, handleChange],
+    [api.onMoved, handleChange],
+    [api.onChildrenReordered, handleChange],
+    [api.onImportBegan, handleImportBegan],
+    [api.onImportEnded, handleImportEnded],
+  ];
+
+  for (const [event, listener] of listeners) event.addListener(listener);
+  return () => {
+    for (const [event, listener] of listeners) event.removeListener(listener);
+  };
 }
 
 function search(bookmarks: BookmarkItem[], query: string): BookmarkItem[] {
@@ -117,4 +168,12 @@ function cloneMockData(): { bookmarks: BookmarkItem[]; folders: Folder[] } {
   };
 }
 
-export const bookmarkService = { getDashboardBookmarks, search, updateBookmark, removeBookmark, moveBookmark };
+export const bookmarkService = {
+  getDashboardBookmarks,
+  readBrowserBookmarks,
+  watchBookmarks,
+  search,
+  updateBookmark,
+  removeBookmark,
+  moveBookmark,
+};
