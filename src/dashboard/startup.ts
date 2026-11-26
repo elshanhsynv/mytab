@@ -16,7 +16,7 @@ import {
 import { hydrateWallpaper } from './actions';
 import { syncBrowserBookmarks } from './bookmark-sync';
 import { bindDashboardEvents } from './events';
-import { applyPinsToFolders } from './items';
+import { applyPinsToFolders, GRID_BREAKPOINTS } from './items';
 import { applyAppearance, renderDashboard, scheduleSectionsRender as scheduleSections } from './render';
 import type { StartupData, Unsubscribe } from './types';
 
@@ -38,6 +38,7 @@ export async function initDashboard(appRoot: HTMLElement): Promise<void> {
   bindDashboardEvents(appRoot);
   void subscribeState(appRoot);
   syncBrowserBookmarks();
+  watchGridBreakpoints(appRoot);
   void hydrateWallpaper(startupData.settings, startupData.legacyWallpaperUrl).catch((error: unknown) => {
     console.error('Failed to hydrate wallpaper.', error);
   });
@@ -149,5 +150,12 @@ async function persistSafely(label: string, action: () => Promise<void>): Promis
     await action();
   } catch (error) {
     console.error(`Failed to persist ${label}.`, error);
+  }
+}
+
+/** Page sizes depend on how many columns fit, so re-page when that changes. */
+function watchGridBreakpoints(appRoot: HTMLElement): void {
+  for (const query of GRID_BREAKPOINTS) {
+    window.matchMedia(query).addEventListener('change', () => scheduleSections(appRoot));
   }
 }

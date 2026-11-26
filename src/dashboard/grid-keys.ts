@@ -19,13 +19,15 @@ export function bindGridKeyboard(appRoot: HTMLElement): void {
     if (!(event instanceof KeyboardEvent) || !(tile instanceof HTMLElement)) return;
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
 
-    const grid = tile.parentElement;
+    // Launcher tiles sit in a list-item wrapper; folder cards don't.
+    const cell =
+      tile.parentElement?.getAttribute("role") === "listitem" ? tile.parentElement : tile;
+    const grid = cell.parentElement;
     if (!grid) return;
 
-    const tiles = Array.from(grid.children).filter(
-      (child): child is HTMLElement =>
-        child instanceof HTMLElement && child.matches(TILE_SELECTOR),
-    );
+    const tiles = Array.from(grid.children)
+      .map((child) => (child.matches(TILE_SELECTOR) ? child : child.querySelector(TILE_SELECTOR)))
+      .filter((child): child is HTMLElement => child instanceof HTMLElement);
     const index = tiles.indexOf(tile);
     if (index < 0) return;
 

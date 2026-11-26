@@ -60,6 +60,10 @@ export function showContextMenu(
 ): void {
     closeContextMenu();
 
+    // Focus returns here when the menu is dismissed with Escape.
+    const opener =
+        document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
     const menu = document.createElement("div");
     menu.className = styles.menu;
     menu.setAttribute("role", "menu");
@@ -75,11 +79,18 @@ export function showContextMenu(
   `;
 
     document.body.append(menu);
-    const rect = menu.getBoundingClientRect();
-    const x = Math.min(position.x, window.innerWidth - rect.width - 8);
-    const y = Math.min(position.y, window.innerHeight - rect.height - 8);
+    // Layout size, not getBoundingClientRect: the opening animation scales the
+    // menu down at first, which would let it overflow the window.
+    const x = Math.min(position.x, window.innerWidth - menu.offsetWidth - 8);
+    const y = Math.min(position.y, window.innerHeight - menu.offsetHeight - 8);
     menu.style.left = `${Math.max(8, x)}px`;
     menu.style.top = `${Math.max(8, y)}px`;
+
+    // Put focus in the menu so it can be used from the keyboard.
+    const menuItems = Array.from(
+        menu.querySelectorAll<HTMLButtonElement>("[data-context-action]"),
+    );
+    menuItems[0]?.focus({ preventScroll: true });
 
     // Closing the menu (any way, including opening another one) removes these.
     const controller = new AbortController();
@@ -111,6 +122,20 @@ export function showContextMenu(
     const keyHandler = (event: KeyboardEvent) => {
         if (event.key === "Escape") {
             closeContextMenu();
+            opener?.focus({ preventScroll: true });
+            return;
+        }
+
+        // Up/Down move between items, wrapping around, as menus do.
+        if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+            event.preventDefault();
+            const current = menuItems.indexOf(
+                document.activeElement as HTMLButtonElement,
+            );
+            const step = event.key === "ArrowDown" ? 1 : -1;
+            const next =
+                (current + step + menuItems.length) % menuItems.length;
+            menuItems[current < 0 ? 0 : next]?.focus();
         }
     };
 

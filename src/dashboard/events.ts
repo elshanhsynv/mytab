@@ -152,11 +152,26 @@ function bindBookmarkEvents(appRoot: HTMLElement, dragState: DragState): void {
     const bookmark = findDashboardItem(getBookmarkId(target));
     if (!bookmark || !(event instanceof MouseEvent)) return;
 
+    // The keyboard menu key reports a point that may be nowhere near the
+    // tile, so open beside the tile unless the pointer is on it.
+    const rect = target.getBoundingClientRect();
+    const onTile =
+      event.clientX >= rect.left && event.clientX <= rect.right &&
+      event.clientY >= rect.top && event.clientY <= rect.bottom;
     showContextMenu(
       bookmark,
-      { x: event.clientX, y: event.clientY },
+      onTile ? { x: event.clientX, y: event.clientY } : { x: rect.left, y: rect.bottom + 4 },
       handleContextAction,
     );
+  });
+
+  delegate(appRoot, '[data-action="tile-menu"]', "click", (event, target) => {
+    event.preventDefault();
+    const bookmark = findDashboardItem(getBookmarkId(target));
+    if (!bookmark) return;
+
+    const rect = target.getBoundingClientRect();
+    showContextMenu(bookmark, { x: rect.left, y: rect.bottom + 4 }, handleContextAction);
   });
 
   delegate(appRoot, ".bookmark-card", "pointerdown", (event, target) => {
