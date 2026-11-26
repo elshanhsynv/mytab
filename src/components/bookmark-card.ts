@@ -91,7 +91,10 @@ export function createBookmarkCard(
         card.append(pin);
     }
 
-    card.title = getDomain(bookmark.url);
+    // In the Bookmarks view tiles from many folders sit together, so say which.
+    card.title = bookmark.folderTitle
+        ? `${getDomain(bookmark.url)} · ${bookmark.folderTitle}`
+        : getDomain(bookmark.url);
     card.append(wrapper, title);
 
     return card;
