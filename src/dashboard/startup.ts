@@ -16,6 +16,7 @@ import {
 import { hydrateWallpaper } from './actions';
 import { syncBrowserBookmarks } from './bookmark-sync';
 import { bindDashboardEvents } from './events';
+import { settingsPreview } from './settings-preview';
 import { applyPinsToFolders, GRID_BREAKPOINTS } from './items';
 import { applyAppearance, renderDashboard, scheduleSectionsRender as scheduleSections } from './render';
 import type { StartupData, Unsubscribe } from './types';
@@ -84,7 +85,8 @@ function subscribeState(appRoot: HTMLElement): Unsubscribe {
       scheduleSectionsRender();
     }),
     state.subscribe('settings', (settings, previousSettings) => {
-      void persistSettings(settings, previousSettings);
+      // Previews from the open settings modal are shown but not saved.
+      if (!settingsPreview.active) void persistSettings(settings);
       applyAppearance(settings);
       if (settingsAffectShell(settings, previousSettings)) {
         renderDashboard(appRoot);
@@ -131,13 +133,19 @@ function settingsAffectSections(
   );
 }
 
-async function persistSettings(settings: DashboardSettings, previousSettings?: DashboardSettings): Promise<void> {
+/** The wallpaper URL last written, to skip rewriting a large data URL. */
+let savedWallpaperUrl: string | undefined;
+
+async function persistSettings(settings: DashboardSettings): Promise<void> {
   await persistSafely('settings', async () => {
     const writes: Promise<void>[] = [
       storage.set(APP_CONFIG.STORAGE_KEYS.SETTINGS, getSettingsForStorage(settings)),
     ];
 
-    if (!previousSettings || previousSettings.wallpaperUrl !== settings.wallpaperUrl) {
+    // Compared with the last save rather than the previous state, which may
+    // have been an unsaved preview with the same wallpaper.
+    if (savedWallpaperUrl !== settings.wallpaperUrl) {
+      savedWallpaperUrl = settings.wallpaperUrl;
       writes.push(storage.set(APP_CONFIG.STORAGE_KEYS.WALLPAPER, settings.wallpaperUrl));
     }
 

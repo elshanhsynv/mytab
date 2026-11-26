@@ -14,6 +14,7 @@ import {
   reorderBookmarks,
 } from "./actions";
 import { bindGridKeyboard } from "./grid-keys";
+import { settingsPreview } from "./settings-preview";
 import { showToast } from "./toast";
 import type { DashboardView, DragState } from "./types";
 import { DASHBOARD_VIEWS } from "./types";
@@ -87,11 +88,27 @@ async function openSettings(): Promise<void> {
 
   try {
     const { showSettingsModal } = await loadSettingsModal();
+    const original = state.get("settings");
+
+    settingsPreview.start();
     showSettingsModal({
-      settings: state.get("settings"),
-      onSave: (settings) => state.set("settings", settings),
+      settings: original,
+      onPreview: (settings) => state.set("settings", settings),
+      onSave: (settings) => {
+        settingsPreview.end();
+        state.set("settings", settings);
+      },
+      onCancel: () => {
+        settingsPreview.end();
+        state.set("settings", original);
+      },
       onExport: exportSettings,
-      onImport: importSettings,
+      onImport: async (file) => {
+        // Drop any unsaved preview; the import then sets what it contains.
+        settingsPreview.end();
+        state.set("settings", original);
+        await importSettings(file);
+      },
     });
   } catch (error) {
     console.error("Failed to open settings.", error);

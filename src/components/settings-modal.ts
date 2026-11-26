@@ -18,6 +18,10 @@ export type MaybePromise<T> = T | Promise<T>;
 export type SettingsModalOptions = {
     settings: DashboardSettings;
     onSave: (settings: DashboardSettings) => MaybePromise<void>;
+    /** Called with the form's current values whenever a field changes. */
+    onPreview?: (settings: DashboardSettings) => void;
+    /** Called when the modal closes without saving, to undo the preview. */
+    onCancel?: () => void;
     onExport: () => MaybePromise<void>;
     onImport: (file: File) => MaybePromise<void>;
 };
@@ -550,7 +554,11 @@ function bindWallpaperSelection(root: HTMLElement, signal: AbortSignal): void {
     );
 }
 
-function bindWallpaperUpload(root: HTMLElement, signal: AbortSignal): void {
+function bindWallpaperUpload(
+    root: HTMLElement,
+    signal: AbortSignal,
+    onChange: () => void,
+): void {
     const trigger = root.querySelector<HTMLButtonElement>("[data-custom-trigger]");
     const fileInput = root.querySelector<HTMLInputElement>(
         "[data-wallpaper-file]",
@@ -569,7 +577,11 @@ function bindWallpaperUpload(root: HTMLElement, signal: AbortSignal): void {
             if (!file || !isImageFile(file)) return;
 
             void readOptimizedWallpaper(file)
-                .then((dataUrl) => applyWallpaperToForm(root, "custom", dataUrl))
+                .then((dataUrl) => {
+                    if (signal.aborted) return;
+                    applyWallpaperToForm(root, "custom", dataUrl);
+                    onChange();
+                })
                 .catch((error: unknown) => {
                     console.error("Failed to load custom wallpaper.", error);
                 });
@@ -741,6 +753,7 @@ function mountDropdown<T extends string>(
     value: T,
     iconHtml: string,
     signal: AbortSignal,
+    onChange: () => void,
 ): Dropdown<T> | undefined {
     const host = root.querySelector<HTMLElement>(
         `[data-settings-dropdown="${name}"]`,
@@ -754,6 +767,7 @@ function mountDropdown<T extends string>(
         value,
         variant: "settings",
         iconHtml,
+        onChange,
     });
 
     host.append(dropdown.element);
@@ -765,6 +779,7 @@ function mountSettingsDropdowns(
     root: HTMLElement,
     settings: DashboardSettings,
     signal: AbortSignal,
+    onChange: () => void,
 ): SettingsDropdowns {
     return {
         dashboardView: mountDropdown(
@@ -775,6 +790,7 @@ function mountSettingsDropdowns(
             settings.dashboardView,
             icons.grid,
             signal,
+            onChange,
         ),
         gridRows: mountDropdown(
             root,
@@ -784,6 +800,7 @@ function mountSettingsDropdowns(
             String(clampGridRows(settings.gridRows)),
             icons.grid,
             signal,
+            onChange,
         ),
         gridColumns: mountDropdown(
             root,
@@ -793,6 +810,7 @@ function mountSettingsDropdowns(
             String(clampGridColumns(settings.gridColumns)),
             icons.grid,
             signal,
+            onChange,
         ),
         cardDensity: mountDropdown(
             root,
@@ -802,6 +820,7 @@ function mountSettingsDropdowns(
             settings.cardDensity,
             icons.dots,
             signal,
+            onChange,
         ),
         clockFormat: mountDropdown(
             root,
@@ -811,6 +830,7 @@ function mountSettingsDropdowns(
             settings.clockFormat,
             icons.clock,
             signal,
+            onChange,
         ),
         defaultSearchEngine: mountDropdown(
             root,
@@ -820,6 +840,7 @@ function mountSettingsDropdowns(
             settings.defaultSearchEngine,
             icons.search,
             signal,
+            onChange,
         ),
     };
 }
@@ -889,15 +910,29 @@ export function showSettingsModal(options: SettingsModalOptions): void {
     const form = overlay.querySelector<HTMLFormElement>("form");
     if (!form) return;
 
-    const close = (): void => {
+    // Changes show on the dashboard as they are made; closing without saving
+    // puts the dashboard back the way it was.
+    const close = ({ keepChanges = false } = {}): void => {
         if (controller.signal.aborted) return;
 
         controller.abort();
         overlay.remove();
         closeActiveModal = undefined;
-        previouslyFocused?.focus();
+        if (!keepChanges) options.onCancel?.();
+
+        // A preview may have re-rendered the dashboard, replacing the
+        // element that opened the modal.
+        const returnFocus = previouslyFocused?.isConnected
+            ? previouslyFocused
+            : document.querySelector<HTMLElement>('[data-action="open-settings"]');
+        returnFocus?.focus();
     };
-    closeActiveModal = close;
+    closeActiveModal = () => close();
+
+    const preview = (): void => {
+        if (controller.signal.aborted) return;
+        options.onPreview?.(readSettingsFromForm(form, draft));
+    };
 
     document.body.append(overlay);
     form.focus();
@@ -906,11 +941,16 @@ export function showSettingsModal(options: SettingsModalOptions): void {
         overlay,
         draft,
         controller.signal,
+        preview,
     );
 
     overlay.querySelectorAll<HTMLElement>("[data-close]").forEach((element) => {
-        element.addEventListener("click", close, { signal: controller.signal });
+        element.addEventListener("click", () => close(), { signal: controller.signal });
     });
+
+    // Text fields, toggles and wallpaper choices; dropdowns report through
+    // `preview` directly.
+    form.addEventListener("input", preview, { signal: controller.signal });
 
     overlay.addEventListener(
         "click",
@@ -944,7 +984,12 @@ export function showSettingsModal(options: SettingsModalOptions): void {
 
             const file = input.files?.[0];
             if (file) {
-                runSafely(() => options.onImport(file), "Import settings");
+                // An import replaces the settings, so there is nothing to
+                // preview or undo afterwards.
+                runSafely(async () => {
+                    await options.onImport(file);
+                    close({ keepChanges: true });
+                }, "Import settings");
             }
             input.value = "";
         },
@@ -954,15 +999,16 @@ export function showSettingsModal(options: SettingsModalOptions): void {
     overlay.querySelector<HTMLElement>("[data-reset]")?.addEventListener(
         "click",
         () => {
-            // Resets the form to app defaults but does not save — the
-            // person still has to hit "Save changes" (or can just Cancel
-            // to back out of the reset entirely).
+            // Resets the form to app defaults and previews them, but does
+            // not save — the person still has to hit "Save changes" (or can
+            // Cancel to back out of the reset entirely).
             applySettingsToForm(
                 overlay,
                 form,
                 APP_CONFIG.DEFAULTS.settings as DashboardSettings,
                 dropdowns,
             );
+            preview();
         },
         { signal: controller.signal },
     );
@@ -970,7 +1016,7 @@ export function showSettingsModal(options: SettingsModalOptions): void {
     bindSectionNav(overlay, controller.signal);
     bindGreetingToggle(overlay, controller.signal);
     bindWallpaperSelection(overlay, controller.signal);
-    bindWallpaperUpload(overlay, controller.signal);
+    bindWallpaperUpload(overlay, controller.signal, preview);
 
     form.addEventListener(
         "submit",
@@ -979,7 +1025,7 @@ export function showSettingsModal(options: SettingsModalOptions): void {
             const settings = readSettingsFromForm(form, draft);
 
             void Promise.resolve(options.onSave(settings))
-                .then(close)
+                .then(() => close({ keepChanges: true }))
                 .catch((error: unknown) => {
                     console.error("Save settings failed.", error);
                 });
