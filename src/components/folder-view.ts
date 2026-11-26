@@ -1,7 +1,7 @@
 import type { CardDensity } from "../dashboard/types";
 import type { Folder } from "../types";
 import { createAddFavoriteCard } from "./add-favorite-card";
-import { createBookmarkGrid, MAX_STAGGER_INDEX } from "./bookmark-grid";
+import { asListItem, createBookmarkGrid, MAX_STAGGER_INDEX } from "./bookmark-grid";
 import { createFolderCard, createNewFolderCard } from "./folder-card";
 import { createPagination } from "./pagination";
 import { createSection } from "./section";
@@ -66,7 +66,7 @@ export function renderFoldersView(
             columns,
         );
         if (!isSearching && page.end > items.length) {
-            grid.append(
+            grid.append(asListItem(
                 createAddFavoriteCard(
                     density,
                     Math.min(items.length - page.start, MAX_STAGGER_INDEX),
@@ -76,7 +76,7 @@ export function renderFoldersView(
                         ariaLabel: `Add bookmark to ${activeFolder.title}`,
                     },
                 ),
-            );
+            ));
         }
         const pagination = createPagination({
             currentPage: page.currentPage,

@@ -1,5 +1,6 @@
 import type { BookmarkItem } from "../types";
 import { getIconUrl, getInitialAvatar } from "../services/favicon";
+import { icons } from "./icons";
 
 const styles = {
     card: "bookmark-card group relative flex w-full flex-col items-center justify-center rounded-2xl bg-white/[0.08] text-center text-white backdrop-blur-xl ring-1 ring-white/5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.12] active:scale-[0.98]",
@@ -102,4 +103,30 @@ function getDomain(url: string): string {
     } catch {
         return url;
     }
+}
+
+/**
+ * The "⋯" button in a tile's corner. It opens the same menu as right-click,
+ * so editing, pinning and removing can be found without it, including on
+ * touch screens. Hidden until the tile is hovered or focused, except on
+ * devices without hover.
+ */
+export function createTileMenuButton(bookmark: BookmarkItem): HTMLButtonElement {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.action = "tile-menu";
+    button.dataset.bookmarkId = bookmark.id;
+    button.setAttribute("aria-label", `More actions for ${bookmark.title}`);
+    button.setAttribute("aria-haspopup", "menu");
+    button.className = [
+        "absolute right-1.5 top-1.5 z-10 grid size-6 place-items-center rounded-full",
+        "bg-black/35 text-white/80 backdrop-blur-md [&_svg]:size-4",
+        "opacity-0 transition duration-200",
+        "group-hover/tile:-translate-y-1 group-hover/tile:opacity-100 group-focus-within/tile:opacity-100",
+        "hover:bg-black/55 hover:text-white",
+        "focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-violet-300",
+        "[@media(hover:none)]:opacity-100",
+    ].join(" ");
+    button.innerHTML = icons.dots;
+    return button;
 }

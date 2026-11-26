@@ -1,10 +1,12 @@
 import { createAddFavoriteCard } from "../components/add-favorite-card";
 import {
+    asListItem,
     createBookmarkGrid,
     MAX_STAGGER_INDEX,
 } from "../components/bookmark-grid";
 import { createClock } from "../components/clock";
 import { gridClass, renderFoldersView } from "../components/folder-view";
+import { createFavoritesWelcome } from "../components/favorites-welcome";
 import { createGreeting } from "../components/greeting";
 import { createPagination } from "../components/pagination";
 import { createSearchBar } from "../components/search-bar";
@@ -232,6 +234,10 @@ function renderFavoritesView(
 ): HTMLElement {
     const sites = sortLauncherItems(data.favorites, current.pinnedIds);
     const isSearching = current.searchQuery.trim().length > 0;
+
+    if (sites.length === 0 && !isSearching) {
+        return createSection("", createFavoritesWelcome(current.bookmarks.length));
+    }
     const page = getDashboardPageWindow(
         "favorites",
         sites.length + (isSearching ? 0 : 1),
@@ -246,9 +252,11 @@ function renderFavoritesView(
 
     if (!isSearching && page.start <= sites.length && page.end > sites.length) {
         grid.append(
-            createAddFavoriteCard(
-                data.settings.cardDensity,
-                Math.min(sites.length, MAX_STAGGER_INDEX),
+            asListItem(
+                createAddFavoriteCard(
+                    data.settings.cardDensity,
+                    Math.min(sites.length - page.start, MAX_STAGGER_INDEX),
+                ),
             ),
         );
     }

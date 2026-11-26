@@ -48,7 +48,6 @@ export function createAddFavoriteCard(
   card.style.setProperty("--item-index", String(index));
   card.type = "button";
   card.dataset.action = action;
-  card.setAttribute("role", "listitem");
   card.setAttribute("aria-label", ariaLabel);
 
   const icon = document.createElement("span");
