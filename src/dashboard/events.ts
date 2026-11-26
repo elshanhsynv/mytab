@@ -13,6 +13,7 @@ import {
   importSettings,
   reorderBookmarks,
 } from "./actions";
+import { bindGridKeyboard } from "./grid-keys";
 import { showToast } from "./toast";
 import type { DashboardView, DragState } from "./types";
 import { DASHBOARD_VIEWS } from "./types";
@@ -22,6 +23,7 @@ export function bindDashboardEvents(appRoot: HTMLElement): void {
   bindNavigationEvents(appRoot);
   bindBookmarkEvents(appRoot, createDragState());
   bindKeyboardShortcuts(appRoot);
+  bindGridKeyboard(appRoot);
 }
 
 function bindModalEvents(appRoot: HTMLElement): void {
