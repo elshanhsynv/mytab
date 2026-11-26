@@ -1,7 +1,8 @@
 import type { CardDensity } from "../dashboard/types";
 import type { Folder } from "../types";
-import { createBookmarkGrid } from "./bookmark-grid";
-import { createFolderCard } from "./folder-card";
+import { createAddFavoriteCard } from "./add-favorite-card";
+import { createBookmarkGrid, MAX_STAGGER_INDEX } from "./bookmark-grid";
+import { createFolderCard, createNewFolderCard } from "./folder-card";
 import { createPagination } from "./pagination";
 import { createSection } from "./section";
 import { ArrowLeft, createElement } from "lucide";
@@ -14,6 +15,8 @@ type FolderViewOptions = {
     columns: number;
     itemsPerPage: number;
     currentPage: number;
+    /** Hides the "add" tiles while the dashboard is filtered. */
+    isSearching: boolean;
     onPageChange: (page: number) => void;
     signal: AbortSignal;
 };
@@ -39,6 +42,7 @@ export function renderFoldersView(
         columns,
         itemsPerPage,
         currentPage,
+        isSearching,
         onPageChange,
         signal,
     }: FolderViewOptions,
@@ -47,18 +51,33 @@ export function renderFoldersView(
     const activeFolder = folders.find((folder) => folder.id === activeFolderId);
 
     if (activeFolder) {
+        const items = activeFolder.items;
+        // The "Add bookmark" tile takes the slot after the last bookmark.
         const page = getPageWindow(
-            activeFolder.items.length,
+            items.length + (isSearching ? 0 : 1),
             itemsPerPage,
             currentPage,
         );
         fragment.append(createFolderHeader(activeFolder.title));
         const grid = createBookmarkGrid(
-            activeFolder.items.slice(page.start, page.end),
+            items.slice(page.start, Math.min(page.end, items.length)),
             gridClass(density),
             density,
             columns,
         );
+        if (!isSearching && page.end > items.length) {
+            grid.append(
+                createAddFavoriteCard(
+                    density,
+                    Math.min(items.length - page.start, MAX_STAGGER_INDEX),
+                    {
+                        action: "add-bookmark",
+                        label: "Add bookmark",
+                        ariaLabel: `Add bookmark to ${activeFolder.title}`,
+                    },
+                ),
+            );
+        }
         const pagination = createPagination({
             currentPage: page.currentPage,
             pageCount: page.pageCount,
@@ -81,6 +100,7 @@ export function renderFoldersView(
     const folderGrid = document.createElement("div");
     folderGrid.className = styles.folderGrid;
     folders.forEach((folder) => folderGrid.append(createFolderCard(folder)));
+    if (!isSearching) folderGrid.append(createNewFolderCard());
     fragment.append(
         createSection("", folderGrid, "No folders match your search."),
     );

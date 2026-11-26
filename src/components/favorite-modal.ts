@@ -6,16 +6,23 @@ type MaybePromise<T> = T | Promise<T>;
 
 export type FavoriteFormValues = {
   title: string;
+  /** Empty for folders. */
   url: string;
+  /** Set when the form offers a folder choice. */
+  folderId?: string;
 };
 
 /** What the form edits; used in its wording. */
-export type FavoriteModalKind = "favorite" | "bookmark";
+export type FavoriteModalKind = "favorite" | "bookmark" | "folder";
+
+export type FolderChoice = { id: string; title: string };
 
 export type FavoriteModalOptions = {
   favorite?: BookmarkItem;
   /** Defaults to "favorite". */
   kind?: FavoriteModalKind;
+  /** Shows a folder picker, preset to the edited item's folder. */
+  folders?: readonly FolderChoice[];
   onSave: (favorite: FavoriteFormValues) => MaybePromise<void>;
 };
 
@@ -77,7 +84,7 @@ export function showFavoriteModal(options: FavoriteModalOptions): void {
   const kind = options.kind ?? "favorite";
   form.append(
     createHeader(isEditing, kind),
-    createBody(options.favorite),
+    createBody(kind, options.favorite, options.folders),
     createFooter(isEditing ? `Save ${kind}` : `Add ${kind}`),
   );
 
@@ -90,7 +97,9 @@ export function showFavoriteModal(options: FavoriteModalOptions): void {
     'button[type="submit"]',
   );
   const closeButtons = form.querySelectorAll<HTMLButtonElement>("[data-close]");
-  const inputs = form.querySelectorAll<HTMLInputElement>("input");
+  const inputs = form.querySelectorAll<HTMLInputElement | HTMLSelectElement>(
+    "input, select",
+  );
 
   let saving = false;
 
@@ -233,7 +242,7 @@ function trapFocus(container: HTMLElement, event: KeyboardEvent): void {
 function getFocusableElements(container: HTMLElement): HTMLElement[] {
   return Array.from(
     container.querySelectorAll<HTMLElement>(
-      "input:not([disabled]), button:not([disabled])",
+      "input:not([disabled]), select:not([disabled]), button:not([disabled])",
     ),
   );
 }
@@ -251,10 +260,11 @@ function createHeader(isEditing: boolean, kind: FavoriteModalKind): HTMLElement 
 
   const subtitle = document.createElement("p");
   subtitle.className = styles.subtitle;
-  subtitle.textContent =
-    kind === "bookmark"
-      ? "Changes are saved to your browser bookmarks."
-      : "Save a title and URL to your personal launcher.";
+  subtitle.textContent = {
+    favorite: "Save a title and URL to your personal launcher.",
+    bookmark: "Changes are saved to your browser bookmarks.",
+    folder: "The folder is added to your bookmarks bar.",
+  }[kind];
 
   const closeButton = document.createElement("button");
   closeButton.className = styles.close;
@@ -268,29 +278,38 @@ function createHeader(isEditing: boolean, kind: FavoriteModalKind): HTMLElement 
   return header;
 }
 
-function createBody(favorite?: BookmarkItem): HTMLElement {
+function createBody(
+  kind: FavoriteModalKind,
+  favorite?: BookmarkItem,
+  folders?: readonly FolderChoice[],
+): HTMLElement {
   const body = document.createElement("div");
   body.className = styles.body;
 
-  const titleField = createField(
-    "Title",
-    "title",
-    "Example",
-    favorite?.title ?? "",
-  );
-  const urlField = createField(
-    "URL",
-    "url",
-    "https://example.com",
-    favorite?.url ?? "",
-  );
+  const fields: HTMLElement[] = [
+    createField(
+      kind === "folder" ? "Name" : "Title",
+      "title",
+      kind === "folder" ? "Reading list" : "Example",
+      favorite?.title ?? "",
+    ),
+  ];
+  if (kind !== "folder") {
+    fields.push(
+      createField("URL", "url", "https://example.com", favorite?.url ?? ""),
+    );
+  }
+  if (folders?.length) {
+    fields.push(createFolderField(folders, favorite?.folderId));
+  }
+
   const error = document.createElement("p");
   error.id = ERROR_ID;
   error.className = styles.error;
   error.dataset.error = "true";
   error.setAttribute("aria-live", "polite");
 
-  body.append(titleField, urlField, error);
+  body.append(...fields, error);
   return body;
 }
 
@@ -342,11 +361,35 @@ function createField(
   return label;
 }
 
+function createFolderField(
+  folders: readonly FolderChoice[],
+  selectedId?: string,
+): HTMLElement {
+  const label = document.createElement("label");
+  label.className = styles.field;
+
+  const text = document.createElement("span");
+  text.className = styles.label;
+  text.textContent = "Folder";
+
+  const select = document.createElement("select");
+  select.className = styles.input;
+  select.name = "folderId";
+  for (const folder of folders) {
+    select.append(new Option(folder.title, folder.id, false, folder.id === selectedId));
+  }
+
+  label.append(text, select);
+  return label;
+}
+
 function readFavoriteForm(form: HTMLFormElement): FavoriteFormValues {
   const data = new FormData(form);
+  const folderId = getFormString(data, "folderId");
   return {
     title: getFormString(data, "title"),
     url: getFormString(data, "url"),
+    ...(folderId ? { folderId } : {}),
   };
 }
 
@@ -362,13 +405,17 @@ function validateFavorite(
 ): ValidationResult {
   const title = values.title.trim();
   const rawUrl = values.url.trim();
+  const { folderId } = values;
 
   if (!title) {
     return {
       ok: false,
       field: "title",
-      message: `Add a title for this ${kind}.`,
+      message: kind === "folder" ? "Add a name for this folder." : `Add a title for this ${kind}.`,
     };
+  }
+  if (kind === "folder") {
+    return { ok: true, values: { title, url: "" } };
   }
   if (!rawUrl) {
     return { ok: false, field: "url", message: `Add a URL for this ${kind}.` };
@@ -377,7 +424,7 @@ function validateFavorite(
   // Browser bookmarks can hold chrome://, file:// or javascript: URLs. Keep
   // an unchanged URL as it is, so renaming such a bookmark still works.
   if (originalUrl !== undefined && rawUrl === originalUrl) {
-    return { ok: true, values: { title, url: rawUrl } };
+    return { ok: true, values: { title, url: rawUrl, folderId } };
   }
 
   const hasScheme = /^[a-z][a-z\d+.-]*:/i.test(rawUrl);
@@ -394,5 +441,5 @@ function validateFavorite(
     return { ok: false, field: "url", message: "Use an http or https URL." };
   }
 
-  return { ok: true, values: { title, url: url.toString() } };
+  return { ok: true, values: { title, url: url.toString(), folderId } };
 }

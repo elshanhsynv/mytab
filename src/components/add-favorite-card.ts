@@ -23,21 +23,33 @@ const styles = {
     "max-w-full truncate font-semibold leading-tight text-white",
 };
 
+type AddCardOptions = {
+  /** `data-action` the click is delegated on. */
+  action: string;
+  label: string;
+  ariaLabel: string;
+};
+
+const ADD_FAVORITE: AddCardOptions = {
+  action: "add-favorite",
+  label: "Add shortcut",
+  ariaLabel: "Add favorite",
+};
+
+/** A "+" tile at the end of a grid; also used for adding bookmarks. */
 export function createAddFavoriteCard(
   density: CardDensity,
   index: number,
+  { action, label, ariaLabel }: AddCardOptions = ADD_FAVORITE,
 ): HTMLButtonElement {
   const isCompact = density === "compact";
   const card = document.createElement("button");
   card.className = `${styles.addFavoriteCard} ${isCompact ? "gap-2 py-2" : "gap-3 py-3"}`;
   card.style.setProperty("--item-index", String(index));
-
-  console.log(card.style.getPropertyValue("--item-index")); 
-  
   card.type = "button";
-  card.dataset.action = "add-favorite";
+  card.dataset.action = action;
   card.setAttribute("role", "listitem");
-  card.setAttribute("aria-label", "Add favorite");
+  card.setAttribute("aria-label", ariaLabel);
 
   const icon = document.createElement("span");
   icon.className = `${styles.addFavoriteIcon} ${isCompact ? styles.addFavoriteIconCompact : styles.addFavoriteIconComfortable}`;
@@ -45,7 +57,7 @@ export function createAddFavoriteCard(
 
   const title = document.createElement("span");
   title.className = `${styles.addFavoriteTitle} ${isCompact ? "text-[11px]" : "text-xs"}`;
-  title.textContent = "Add shortcut";
+  title.textContent = label;
 
   card.append(icon, title);
   return card;

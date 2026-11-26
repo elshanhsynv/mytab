@@ -103,13 +103,16 @@ async function removeBookmark(id: string): Promise<void> {
   }
 }
 
+type NewBookmark = Pick<BookmarkItem, 'title' | 'url' | 'folderId' | 'order'> & { id?: string };
+
 /**
- * Creates `bookmark` again in its folder at its `order`, e.g. to undo a
- * removal. Returns the ID Chrome gives it; outside the extension the old ID
- * is kept.
+ * Creates a bookmark in its folder at its `order`, or at the end of the
+ * folder when `order` is missing. Returns the ID Chrome gives it. Outside the
+ * extension it returns `id` if one is given (e.g. undoing a removal) or a new
+ * local ID.
  */
-async function createBookmark(bookmark: BookmarkItem): Promise<string> {
-  if (!isExtension || !chrome?.bookmarks) return bookmark.id;
+async function createBookmark(bookmark: NewBookmark): Promise<string> {
+  if (!isExtension || !chrome?.bookmarks) return bookmark.id ?? localId('bookmark');
 
   const node = await chrome.bookmarks.create({
     parentId: bookmark.folderId,
@@ -118,6 +121,36 @@ async function createBookmark(bookmark: BookmarkItem): Promise<string> {
     url: bookmark.url,
   });
   return node.id;
+}
+
+/**
+ * Creates an empty folder at the end of the bookmarks bar and returns its ID.
+ */
+async function createFolder(title: string): Promise<string> {
+  if (!isExtension || !chrome?.bookmarks) return localId('folder');
+
+  // The tree's first top-level folder is the bookmarks bar.
+  const [root] = await chrome.bookmarks.getTree();
+  const bookmarksBar = root?.children?.find((node) => !node.url);
+  if (!bookmarksBar) throw new Error('Could not find the bookmarks bar.');
+
+  const node = await chrome.bookmarks.create({ parentId: bookmarksBar.id, title });
+  return node.id;
+}
+
+/**
+ * Moves a bookmark to the end of another folder. Returns its new index there
+ * when the browser reports one.
+ */
+async function moveBookmarkToFolder(id: string, folderId: string): Promise<number | undefined> {
+  if (!isExtension || !chrome?.bookmarks) return undefined;
+
+  const node = await chrome.bookmarks.move(id, { parentId: folderId });
+  return node.index;
+}
+
+function localId(prefix: string): string {
+  return `${prefix}-${crypto.randomUUID()}`;
 }
 
 /**
@@ -146,7 +179,9 @@ function walk(nodes: BookmarkTreeNode[], folders: Folder[], looseBookmarks: Book
     }
 
     const children = node.children ?? [];
-    if (!children.length) continue;
+    // Skip empty top-level folders such as an unused "Mobile bookmarks", but
+    // keep empty folders the user made, so bookmarks can be added to them.
+    if (!children.length && !parentFolder) continue;
 
     const folder: Folder = {
       id: node.id,
@@ -193,5 +228,7 @@ export const bookmarkService = {
   updateBookmark,
   removeBookmark,
   createBookmark,
+  createFolder,
+  moveBookmarkToFolder,
   moveBookmark,
 };

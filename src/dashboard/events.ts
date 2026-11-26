@@ -3,8 +3,10 @@ import { showFavoriteModal } from "../components/favorite-modal";
 import { delegate } from "../core/events";
 import { state } from "../core/state";
 import {
+  addBookmarkToFolder,
   addFavorite,
   addRecent,
+  createBookmarkFolder,
   exportSettings,
   findDashboardItem,
   handleContextAction,
@@ -26,6 +28,23 @@ function bindModalEvents(appRoot: HTMLElement): void {
   delegate(appRoot, '[data-action="add-favorite"]', "click", () => {
     showFavoriteModal({
       onSave: (favorite) => addFavorite(favorite),
+    });
+  });
+
+  delegate(appRoot, '[data-action="add-bookmark"]', "click", () => {
+    const folderId = state.get("activeFolderId");
+    if (!folderId) return;
+
+    showFavoriteModal({
+      kind: "bookmark",
+      onSave: (values) => addBookmarkToFolder(folderId, values),
+    });
+  });
+
+  delegate(appRoot, '[data-action="new-folder"]', "click", () => {
+    showFavoriteModal({
+      kind: "folder",
+      onSave: (values) => createBookmarkFolder(values.title),
     });
   });
 

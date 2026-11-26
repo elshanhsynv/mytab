@@ -105,6 +105,7 @@ export function renderSections(appRoot: HTMLElement): void {
                     columns: visibleData.settings.gridColumns,
                     itemsPerPage: visibleData.itemsPerPage,
                     currentPage: folderPages.get(current.activeFolderId) ?? 0,
+                    isSearching: current.searchQuery.trim().length > 0,
                     onPageChange: (selectedPage) => {
                         folderPages.set(current.activeFolderId, selectedPage);
                         animateNextSections = true;
