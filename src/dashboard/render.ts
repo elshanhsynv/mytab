@@ -130,7 +130,7 @@ export function renderSections(appRoot: HTMLElement): void {
             renderBookmarksView(
                 appRoot,
                 visibleData,
-                current.pinnedIds,
+                current,
                 controller.signal,
             ),
         );
@@ -277,10 +277,15 @@ function renderFavoritesView(
 function renderBookmarksView(
     appRoot: HTMLElement,
     data: VisibleDashboardData,
-    pinnedIds: string[],
+    current: Readonly<AppState>,
     signal: AbortSignal,
 ): HTMLElement {
-    const sites = sortLauncherItems(data.bookmarks, pinnedIds);
+    // All folders, not data.folders, which is only filled in the Folders view.
+    const sites = sortLauncherItems(
+        data.bookmarks,
+        current.pinnedIds,
+        current.folders,
+    );
     const page = getDashboardPageWindow(
         "bookmarks",
         sites.length,
