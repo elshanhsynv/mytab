@@ -360,7 +360,7 @@ function buildDashboardSection(draft: DashboardSettings): string {
       <p class="${styles.sectionSubtitle}">Customize how your dashboard looks and behaves.</p>
 
       <div class="${styles.fieldGrid}">
-        ${dropdownField("Default view", "dashboardView")}
+        ${dropdownField("View", "dashboardView")}
         ${dropdownField("Grid rows", "gridRows")}
         ${dropdownField("Grid columns", "gridColumns")}
         ${dropdownField("Item density", "cardDensity")}
@@ -785,7 +785,7 @@ function mountSettingsDropdowns(
         dashboardView: mountDropdown(
             root,
             "dashboardView",
-            "Default view",
+            "View",
             DASHBOARD_VIEW_OPTIONS,
             settings.dashboardView,
             icons.grid,

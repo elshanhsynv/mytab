@@ -11,10 +11,11 @@ import {
     createDropdown,
     type Dropdown,
 } from "./dropdown";
+import { showToast } from "../dashboard/toast";
 import { icons } from "./icons";
 import { debounce } from "../utils/debounce";
 
-const SEARCH_PLACEHOLDER = "Search the web or enter a URL";
+const SEARCH_PLACEHOLDER = "Search or type a URL";
 const DASHBOARD_FILTER_DELAY_MS = 80;
 
 const styles = {
@@ -22,13 +23,13 @@ const styles = {
         "group relative z-10 flex h-14 w-full max-w-2xl items-center gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.055] px-4 shadow-[0_8px_40px_-16px_rgba(0,0,0,0.5)] backdrop-blur-xl transition-all duration-200 hover:border-white/[0.13] hover:bg-white/[0.07] focus-within:z-20 focus-within:border-violet-300/30 focus-within:bg-white/[0.075] focus-within:shadow-[0_0_0_4px_rgba(167,139,250,0.06),0_12px_48px_-16px_rgba(0,0,0,0.6)] sm:mt-8 sm:h-16 sm:px-5",
     srOnly: "sr-only",
     icon:
-        "flex size-5 shrink-0 items-center justify-center text-white/45 transition-colors duration-200 group-focus-within:text-white/70",
+        "flex size-5 shrink-0 items-center justify-center text-white/60 transition-colors duration-200 group-focus-within:text-white/70",
     input:
-        "min-w-0 flex-1 bg-transparent text-[15px] font-normal text-white outline-none placeholder:text-white/38 selection:bg-violet-400/20 sm:text-base [&::-webkit-search-cancel-button]:appearance-none",
+        "min-w-0 flex-1 bg-transparent text-[15px] font-normal text-white outline-none placeholder:text-white/55 selection:bg-violet-400/20 sm:text-base [&::-webkit-search-cancel-button]:appearance-none",
     shortcut:
-        "flex h-7 min-w-7 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] px-2 text-[11px] font-medium text-white/35 transition-all duration-150 group-focus-within:border-white/[0.05] group-focus-within:bg-transparent group-focus-within:text-white/20",
+        "hidden h-7 min-w-7 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] px-2 text-[11px] font-medium text-white/50 sm:flex transition-all duration-150 group-focus-within:border-white/[0.05] group-focus-within:bg-transparent group-focus-within:text-white/20",
     clear:
-        "hidden rounded-lg p-1.5 text-white/35 transition-colors hover:bg-white/[0.06] hover:text-white/75 [&_svg]:size-4",
+        "hidden rounded-lg p-1.5 text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white/75 [&_svg]:size-4",
     engine: "shrink-0",
     suggestions:
         "absolute left-0 right-0 top-[calc(100%+10px)] z-50 hidden overflow-hidden rounded-2xl border border-white/[0.1] bg-[#111522]/95 p-1.5 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl",
@@ -124,6 +125,7 @@ export function createSearchBar(signal: AbortSignal): HTMLElement {
         });
         controller.refreshNow();
         searchInput.focus();
+        showToast(`${SEARCH_ENGINES[engineId].name} is now your default search engine`);
     };
 
     engineDropdown = createDropdown({

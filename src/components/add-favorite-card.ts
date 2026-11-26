@@ -32,7 +32,7 @@ type AddCardOptions = {
 
 const ADD_FAVORITE: AddCardOptions = {
   action: "add-favorite",
-  label: "Add shortcut",
+  label: "Add favorite",
   ariaLabel: "Add favorite",
 };
 

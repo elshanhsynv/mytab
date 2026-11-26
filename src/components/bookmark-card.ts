@@ -3,7 +3,7 @@ import { getIconUrl, getInitialAvatar } from "../services/favicon";
 import { icons } from "./icons";
 
 const styles = {
-    card: "bookmark-card group relative flex w-full flex-col items-center justify-center rounded-2xl bg-white/[0.08] text-center text-white backdrop-blur-xl ring-1 ring-white/5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.12] active:scale-[0.98]",
+    card: "bookmark-card group relative flex w-full flex-col items-center justify-center rounded-2xl bg-white/[0.08] text-center text-white backdrop-blur-xl ring-1 ring-white/5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/20 hover:bg-white/[0.12] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-300",
 
     comfortable: "gap-3 py-3",
     compact: "gap-2 py-2",
@@ -81,7 +81,6 @@ export function createBookmarkCard(
     title.className = `${styles.title} ${
         isCompact ? styles.titleCompact : styles.titleComfortable
     }`;
-    title.title = bookmark.title;
     title.textContent = bookmark.title || bookmark.url;
 
     if (bookmark.pinned) {
@@ -91,10 +90,13 @@ export function createBookmarkCard(
         card.append(pin);
     }
 
-    // In the Bookmarks view tiles from many folders sit together, so say which.
-    card.title = bookmark.folderTitle
+    // The full title (the tile may cut it off), then the site, and the folder
+    // since the Bookmarks view mixes folders.
+    const where = bookmark.folderTitle
         ? `${getDomain(bookmark.url)} · ${bookmark.folderTitle}`
         : getDomain(bookmark.url);
+    card.title = `${bookmark.title}
+${where}`;
     card.append(wrapper, title);
 
     return card;
