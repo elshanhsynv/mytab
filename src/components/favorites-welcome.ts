@@ -34,8 +34,8 @@ export function createFavoritesWelcome(bookmarkCount: number): HTMLElement {
   text.className = styles.text;
   text.textContent =
     bookmarkCount > 0
-      ? "Add shortcuts to the sites you use most, or start from the bookmarks you already have in Chrome. Open a bookmark’s ⋯ menu and choose “Add to favorites”."
-      : "Add shortcuts to the sites you use most.";
+      ? "Add the sites you use most as favorites, or start from the bookmarks you already have in Chrome. Open a bookmark’s ⋯ menu and choose “Add to favorites”."
+      : "Add the sites you use most as favorites.";
 
   const actions = document.createElement("div");
   actions.className = styles.actions;
@@ -44,7 +44,7 @@ export function createFavoritesWelcome(bookmarkCount: number): HTMLElement {
   add.type = "button";
   add.className = styles.primary;
   add.dataset.action = "add-favorite";
-  add.innerHTML = `${icons.plus}<span>Add shortcut</span>`;
+  add.innerHTML = `${icons.plus}<span>Add favorite</span>`;
   actions.append(add);
 
   if (bookmarkCount > 0) {

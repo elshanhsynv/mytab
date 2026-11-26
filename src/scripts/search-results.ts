@@ -185,7 +185,7 @@ export class SearchResultRenderer {
 
         if (result.detail) {
             const detail = document.createElement("span");
-            detail.className = "mt-0.5 block truncate text-xs text-white/40";
+            detail.className = "mt-0.5 block truncate text-xs text-white/55";
             detail.textContent = result.detail;
             content.append(detail);
         }
@@ -201,7 +201,7 @@ export class SearchResultRenderer {
         }
 
         const status = document.createElement("div");
-        status.className = "mx-3 flex items-center gap-2 border-t border-white/[0.07] px-1 py-2 text-xs text-white/40";
+        status.className = "mx-3 flex items-center gap-2 border-t border-white/[0.07] px-1 py-2 text-xs text-white/55";
         status.setAttribute("role", "status");
 
         if (this.status === "loading") {

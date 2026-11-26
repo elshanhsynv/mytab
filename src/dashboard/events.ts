@@ -208,6 +208,9 @@ function bindBookmarkEvents(appRoot: HTMLElement, dragState: DragState): void {
     const dy = Math.abs(event.clientY - dragState.pointerStartY);
     dragState.pointerMoved = dragState.pointerMoved || dx > 8 || dy > 8;
     dragState.pointerOverId = getBookmarkId(target);
+    if (dragState.pointerMoved) {
+      markDropTarget(appRoot, dragState.pointerOverId, dragState.pointerDragId);
+    }
   });
 
   delegate(appRoot, ".bookmark-card", "pointerup", (event, target) => {
@@ -234,6 +237,7 @@ function bindBookmarkEvents(appRoot: HTMLElement, dragState: DragState): void {
     dragState.pointerDragId = "";
     dragState.pointerOverId = "";
     dragState.pointerMoved = false;
+    markDropTarget(appRoot, "");
   });
 
   delegate(appRoot, ".bookmark-card", "dragstart", (event, target) => {
@@ -268,6 +272,7 @@ function bindBookmarkEvents(appRoot: HTMLElement, dragState: DragState): void {
     }
 
     target.classList.remove("opacity-50", "scale-105");
+    markDropTarget(appRoot, "");
     dragState.draggedId = "";
     dragState.dragOverId = "";
     dragState.dropHandled = false;
@@ -284,6 +289,7 @@ function bindBookmarkEvents(appRoot: HTMLElement, dragState: DragState): void {
         ? event.target.closest<HTMLElement>(".bookmark-card")
         : null;
     dragState.dragOverId = target?.dataset.bookmarkId ?? dragState.dragOverId;
+    markDropTarget(appRoot, dragState.dragOverId, dragState.draggedId);
 
     if (event instanceof DragEvent && event.dataTransfer) {
       event.dataTransfer.dropEffect = "move";
@@ -292,6 +298,7 @@ function bindBookmarkEvents(appRoot: HTMLElement, dragState: DragState): void {
 
   delegate(appRoot, ".bookmark-card", "drop", (event, target) => {
     event.preventDefault();
+    markDropTarget(appRoot, "");
     const targetId = getBookmarkId(target);
     const sourceId =
       event instanceof DragEvent
@@ -314,6 +321,22 @@ function bindKeyboardShortcuts(appRoot: HTMLElement): void {
         ?.click();
     }
   });
+}
+
+/**
+ * Outlines the tile a dragged tile would land on. Pass an empty id to clear
+ * it; the dragged tile itself is never marked.
+ */
+function markDropTarget(appRoot: HTMLElement, targetId: string, sourceId = ""): void {
+  const current = appRoot.querySelector<HTMLElement>(".bookmark-card.drop-target");
+  if (current?.dataset.bookmarkId === targetId) return;
+
+  current?.classList.remove("drop-target");
+  if (!targetId || targetId === sourceId) return;
+
+  appRoot
+    .querySelector<HTMLElement>(`.bookmark-card[data-bookmark-id="${CSS.escape(targetId)}"]`)
+    ?.classList.add("drop-target");
 }
 
 function createDragState(): DragState {

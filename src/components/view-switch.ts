@@ -5,8 +5,8 @@ const styles = {
   switcher: "mx-auto flex w-max pb-3 mt-3",
 
   button:
-    "relative px-6 py-1.5 text-lg font-medium text-white/60 transition-colors duration-200 " +
-    "hover:text-white focus-visible:outline-none",
+    "relative rounded-md px-4 py-1.5 text-base font-medium text-white/70 transition-colors duration-200 sm:px-6 sm:text-lg " +
+    "hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300",
 
   buttonActive: "text-violet-400",
 

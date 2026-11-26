@@ -8,10 +8,10 @@ const styles = {
         "inline-flex items-baseline text-[clamp(4.5rem,10vw,8.5rem)] font-extralight leading-[0.88] tracking-[-0.055em] tabular-nums",
 
     period:
-        "ml-2 text-[clamp(1rem,1.8vw,1.5rem)] font-medium tracking-[-0.01em] text-white/40 sm:ml-3",
+        "ml-2 text-[clamp(1rem,1.8vw,1.5rem)] font-medium tracking-[-0.01em] text-white/55 sm:ml-3",
 
     date:
-        "mt-5 text-sm font-medium tracking-[0.01em] text-white/45 sm:mt-6 sm:text-base",
+        "mt-5 text-sm font-medium tracking-[0.01em] text-white/65 sm:mt-6 sm:text-base",
 };
 
 export function createClock(

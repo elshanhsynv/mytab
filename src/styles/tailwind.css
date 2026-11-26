@@ -154,3 +154,9 @@
         transition-duration: 1ms;
     }
 }
+
+/* The tile a dragged tile would be dropped on. */
+.bookmark-card.drop-target {
+    outline: 2px dashed rgb(196 181 253 / 0.9);
+    outline-offset: 3px;
+}
