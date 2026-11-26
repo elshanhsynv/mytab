@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or PR makes the older run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Type-check and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Runs `tsc` (type-check) and `vite build`.
+      - run: npm run build
+
+      # The unpacked extension, ready for chrome://extensions > Load unpacked.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: my-tab-extension
+          path: dist/
+          retention-days: 14
+          if-no-files-found: error
